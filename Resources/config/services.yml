@@ -1,0 +1,19 @@
+services:
+  Bookboon\JsonLDClient\Serializer\JsonLDEncoder:
+    tags:
+      - serializer.encoder
+
+  Bookboon\JsonLDClient\Serializer\NullableDateTimeNormalizer:
+    tags:
+      - serializer.normalizer
+
+  Bookboon\JsonLDClient\Serializer\JsonLDNormalizer:
+    tags:
+      - serializer.normalizer
+      - '%jsonldclient.default_default_class_namespace%'
+
+  Bookboon\JsonLDClient\Client:
+    arguments:
+      - '@Symfony\Component\Serializer\SerializerInterface'
+      - '@Bookboon\JsonLDClient\Mapping\MappingCollection'
+      - null
