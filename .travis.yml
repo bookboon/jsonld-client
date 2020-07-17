@@ -4,10 +4,9 @@ php:
   - 7.3
   - 7.4
 
-addons:
-  code_climate:
-    repo_token:
-      secure: "qA0OSmKJRMcWQSfbx1Pl+Kz8zdlasx5C3mH813M+SjPB99s1NR0ieKDbtrTIUPQ16u37t705MZCflR1SqO8fpM+hDHPhfJ4mt4ykgpYEcX4aUzc9O1E6gyD+/MSC9xJsMU7jEuZBq6GvTjbtHnyOAgikcTEO1nNVRJXLf0ud+Q/EbStv9AeONDSmYHkp5gSZc0+BcDqo0437qIeUmlBZSTZOjRuzEeGZ6HDZQKNwb6KF7bw1U4t7H9G9PkdRLSwM0maW8LJZCLrwcUWl1HJCIYwcFbqjJrItQnYDyAb7GNTgL1+wozedl7afgO91CwSHlrS202RmSgYHwLdmXmHuOIEX/eZGqSPZl8PUy0/HsZtsM/iLWonAxTG07ko5HHEI807+o4qKDg0O/48SVYVdZ5+rqosxZiAKuY3UIni5Y/ughf5k1ux3n9SN39UA1JTgFrF8Yq7fz6JEdKW+fLvorQCWPbqW6BQ2SUgxA7ZjeTjYDsE3fLGkvLpWXKVP9g2w/gzl9WMgotVU112rWdT78Ky8+ur5tGf7AgMP6CNSl/IdZSkaFawMeK97VecCgdtVlWyLfWBovW03GP9rLEWJeN5CnYVCFHLphVkvYFljLuFgoRF4u4/2DJDXgpzxdia8zQT0PbVq6+eVaQXrXudttkmiAMaTWZClqmRMH4Wb7tM="
+env:
+  global:
+    secure: k/lbDsHyTDJiGTApQVwsaLlc3/QhnRw2QNuQawjq0+kNtZ8o5cpJQB2qZ3wmdqRBZ6xPpZgQ7JjCnMCOliaKVhBEHK5cCapIyDd2MfEvMUTjqnx6lXTJ4h5rngcIsSh7vQm3EZWQwLVBnwxM5nWK9JevlWA1Pcryst1D09D/OHscURJsCF55OQjc6T8S3QGEI+MRrhFVBKazZSIEjfv3ce6SJnVcA2TtBSFBhME3wQJPm5ur2LAFwDztBIadPJjNSHN2e6AuvolBotKwJC18h8Bu78WUONVK5/NUFqc7zbq1EQybIrvpqDbQkEaViTAHvPWP1i6bQhQdltqnS9jhhDn0x2UEblP01wAeti0UXa0kbjSecgJLbgdaUCq8kAnkhQrtsDBikbmGl7YIcZJe6m6NoFxf2mTcyU4dzO3bj3ClIFVvEww0jgamZZKSdZLhlRePwVhMS9wQPwMwqwv9ucoy3RrYD1CfKMccnznLIWY143VKMDnwA8fEPXVJNcKqL4y6dxKsGzPeIRKYUktYipMzRYDQFi6Xax8alm4smJSJavHk4GzP4FstISnvhSRkpZyZmoo4EzMltptlmk2noR41990FtfN2+pZRqsy1JOs1Z57nc2ak+LNMid1fBq4XclbS0/k88L1WIUb0eqhpx4ABNFblD9dAJcjAqR3MEg0=
 
 jobs:
   include:
@@ -18,7 +17,10 @@ jobs:
       script: vendor/bin/phpstan analyse -c phpstan.neon
 
 before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
   - composer install
 
 after_script:
-  - vendor/bin/test-reporter
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
