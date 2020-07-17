@@ -20,7 +20,7 @@ class Configuration implements ConfigurationInterface
         $treeBuilder
             ->getRootNode()
             ->children()
-            ->scalarNode('default_class_namespace')->end()
+            ->scalarNode('default_class_namespace')->isRequired()->end()
             ->arrayNode('mappings')
                 ->beforeNormalization()
                     ->ifArray()

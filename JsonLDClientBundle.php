@@ -1,12 +1,11 @@
 <?php
 
-namespace Bookboon\ApiBundle;
+namespace Bookboon\JsonLDClient;
 
-use Bookboon\ApiBundle\DependencyInjection\BookboonApiExtension;
 use Bookboon\JsonLDClient\DependencyInjection\JsonLDClientExtension;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class JsonLDClient extends Bundle
+class JsonLDClientBundle extends Bundle
 {
     public function getContainerExtension()
     {

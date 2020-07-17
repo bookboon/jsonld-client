@@ -18,7 +18,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 class JsonLDClient
 {
     private const CACHE_TIME = 1800;
-    private $_token;
+
     private $_serializer;
     private $_mappings;
     private $_cache;
@@ -28,20 +28,17 @@ class JsonLDClient
 
     /**
      * JsonLdClient constructor.
-     * @param AccessTokenInterface $accessToken
      * @param ClientInterface $client
      * @param SerializerInterface $serializer
      * @param MappingCollection $mappings
      * @param CacheInterface|null $cache
      */
     public function __construct(
-        AccessTokenInterface $accessToken,
         ClientInterface $client,
         SerializerInterface $serializer,
         MappingCollection $mappings,
         ?CacheInterface $cache
     ) {
-        $this->_token = $accessToken;
         $this->_client = $client;
         $this->_serializer = $serializer;
         $this->_mappings = $mappings;
@@ -62,7 +59,7 @@ class JsonLDClient
         }
 
         $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
-        $response = $this->makeRequest($url, $this->getAccessToken(), $httpVerb, [], $jsonContents);
+        $response = $this->makeRequest($url, $httpVerb, [], $jsonContents);
 
         if ($this->_cache) {
             $this->_cache->delete($this->cacheKey($object->getId()));
@@ -81,7 +78,7 @@ class JsonLDClient
 
         $url = sprintf('%s/%s', $map->getUrl($params), $object->getId());
 
-        $this->makeRequest($url, $this->getAccessToken(), 'DELETE', [], '');
+        $this->makeRequest($url, 'DELETE', [], '');
 
         if ($this->_cache) {
             $this->_cache->delete($this->cacheKey($object->getId()));
@@ -92,7 +89,7 @@ class JsonLDClient
     {
         $map = $this->lookupMapping($className);
 
-        $response = $this->makeRequest($map->getUrl($params), $this->getAccessToken(), 'GET', $params);
+        $response = $this->makeRequest($map->getUrl($params),'GET', $params);
         $jsonContents = $response->getBody()->getContents();
 
         if ($jsonContents === '[]' || $jsonContents === "[]\n") {
@@ -115,7 +112,7 @@ class JsonLDClient
         }
 
         if ($jsonContents === null) {
-            $response = $this->makeRequest($url, $this->getAccessToken());
+            $response = $this->makeRequest($url);
             $jsonContents = $response->getBody()->getContents();
         }
 
@@ -127,17 +124,20 @@ class JsonLDClient
     }
 
     /**
-     * @param AccessTokenInterface $token
+     * @param AccessTokenInterface|null $token
      * @return void
      */
-    public function setAccessToken(AccessTokenInterface $token) : void
+    public function setAccessToken(?AccessTokenInterface $token) : void
     {
         $this->accessToken = $token;
     }
 
-    protected function getAccessToken(): AccessTokenInterface
+    /**
+     * @return AccessTokenInterface|null
+     */
+    protected function getAccessToken(): ?AccessTokenInterface
     {
-        return $this->accessToken ?? $this->_token;
+        return $this->accessToken;
     }
 
     /**
@@ -168,15 +168,22 @@ class JsonLDClient
      */
     protected function makeRequest(
         string $url,
-        string $authToken,
         string $httpVerb = 'GET',
         array $queryParams = [],
         ?string $jsonContents = null
     ) : ResponseInterface {
+
+        $headers = [
+            'Accept-Encoding' => 'application/json',
+            'Content-Type' => 'application/json'
+        ];
+
+        if ($this->accessToken !== null) {
+            $headers['Authorization'] = "Bearer {$this->getAccessToken()->getToken()}";
+        }
+
         $requestParams = [
-            RequestOptions::HEADERS => [
-                'Authorization' => "Bearer $authToken",
-            ],
+            RequestOptions::HEADERS => $headers,
             RequestOptions::QUERY => $queryParams
         ];
 
@@ -204,7 +211,7 @@ class JsonLDClient
                         ApiErrorResponse::class,
                         'json'
                     );
-                } catch (JsonLDSerializationException $e) {}
+                } catch (JsonLDSerializationException $e2) {}
 
                 throw new JsonLDResponseException(
                     $e->getMessage(),

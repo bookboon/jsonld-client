@@ -1,4 +1,7 @@
 services:
+  _defaults:
+    autowire: true
+
   Bookboon\JsonLDClient\Serializer\JsonLDEncoder:
     tags:
       - serializer.encoder
@@ -10,10 +13,8 @@ services:
   Bookboon\JsonLDClient\Serializer\JsonLDNormalizer:
     tags:
       - serializer.normalizer
-      - '%jsonldclient.default_default_class_namespace%'
 
-  Bookboon\JsonLDClient\Client:
-    arguments:
-      - '@Symfony\Component\Serializer\SerializerInterface'
-      - '@Bookboon\JsonLDClient\Mapping\MappingCollection'
-      - null
+  GuzzleHttp\ClientInterface:
+    class: GuzzleHttp\Client
+
+  Bookboon\JsonLDClient\Client\JsonLDClient: ~

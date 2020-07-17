@@ -14,7 +14,7 @@ class NullableDateTimeNormalizer extends DateTimeNormalizer
      * @return array|\DateTime|\DateTimeImmutable|false|object|null
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
-    public function denormalize($data, $class, string $format = null, array $context = [])
+    public function denormalize($data, $class, $format = null, array $context = [])
     {
         if ($data === null) {
             return null;
