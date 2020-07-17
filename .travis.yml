@@ -1,13 +1,12 @@
 language: php
 
 php:
-  - 7.2
   - 7.3
   - 7.4
 
-addons:
-  code_climate:
-    repo_token: f250f6c653cfb19fe7460f186f46added2b5b57cf4b4255bbe63685dbff7d88e
+#addons:
+#  code_climate:
+#    repo_token: f250f6c653cfb19fe7460f186f46added2b5b57cf4b4255bbe63685dbff7d88e
 
 jobs:
   include:
