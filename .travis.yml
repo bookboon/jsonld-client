@@ -4,9 +4,10 @@ php:
   - 7.3
   - 7.4
 
-#addons:
-#  code_climate:
-#    repo_token: f250f6c653cfb19fe7460f186f46added2b5b57cf4b4255bbe63685dbff7d88e
+addons:
+  code_climate:
+    repo_token:
+      secure: "qA0OSmKJRMcWQSfbx1Pl+Kz8zdlasx5C3mH813M+SjPB99s1NR0ieKDbtrTIUPQ16u37t705MZCflR1SqO8fpM+hDHPhfJ4mt4ykgpYEcX4aUzc9O1E6gyD+/MSC9xJsMU7jEuZBq6GvTjbtHnyOAgikcTEO1nNVRJXLf0ud+Q/EbStv9AeONDSmYHkp5gSZc0+BcDqo0437qIeUmlBZSTZOjRuzEeGZ6HDZQKNwb6KF7bw1U4t7H9G9PkdRLSwM0maW8LJZCLrwcUWl1HJCIYwcFbqjJrItQnYDyAb7GNTgL1+wozedl7afgO91CwSHlrS202RmSgYHwLdmXmHuOIEX/eZGqSPZl8PUy0/HsZtsM/iLWonAxTG07ko5HHEI807+o4qKDg0O/48SVYVdZ5+rqosxZiAKuY3UIni5Y/ughf5k1ux3n9SN39UA1JTgFrF8Yq7fz6JEdKW+fLvorQCWPbqW6BQ2SUgxA7ZjeTjYDsE3fLGkvLpWXKVP9g2w/gzl9WMgotVU112rWdT78Ky8+ur5tGf7AgMP6CNSl/IdZSkaFawMeK97VecCgdtVlWyLfWBovW03GP9rLEWJeN5CnYVCFHLphVkvYFljLuFgoRF4u4/2DJDXgpzxdia8zQT0PbVq6+eVaQXrXudttkmiAMaTWZClqmRMH4Wb7tM="
 
 jobs:
   include:
