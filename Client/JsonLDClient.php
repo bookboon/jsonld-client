@@ -158,7 +158,6 @@ class JsonLDClient
 
     /**
      * @param string $url
-     * @param string $authToken
      * @param string $httpVerb
      * @param array $queryParams
      * @param string|null $jsonContents

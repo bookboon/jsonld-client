@@ -1,0 +1,24 @@
+language: php
+
+php:
+  - 7.2
+  - 7.3
+  - 7.4
+
+addons:
+  code_climate:
+    repo_token: f250f6c653cfb19fe7460f186f46added2b5b57cf4b4255bbe63685dbff7d88e
+
+jobs:
+  include:
+    - stage: "Tests"
+      name: "Unit Tests"
+      script: vendor/bin/phpunit -c . --coverage-clover build/logs/clover.xml
+    - name: "Static Analyser"
+      script: vendor/bin/phpstan analyse -c phpstan.neon
+
+before_script:
+  - composer install
+
+after_script:
+  - vendor/bin/test-reporter

@@ -264,9 +264,6 @@ class JsonLdClientTest extends TestCase
         $client = new Client(['handler' => $handlerStack]);
 
         return new JsonLDClient(
-            new AccessToken([
-                'access_token' => 'eyTest'
-            ]),
             $client,
             SerializerHelper::create([]),
             new MappingCollection(
