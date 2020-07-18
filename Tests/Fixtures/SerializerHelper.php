@@ -8,6 +8,7 @@ use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
 use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
 use Bookboon\JsonLDClient\Serializer\NullableDateTimeNormalizer;
+use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\Serializer\Encoder\JsonDecode;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -19,8 +20,10 @@ class SerializerHelper
     public static function create(array $mappings = [], array $defaultContext = []) : SerializerInterface
     {
         $propertyExtractor = new PhpDocExtractor();
+        $propertyAccessor = new PropertyAccessor();
+
         $collection = new MappingCollection($mappings, 'Bookboon\JsonLDClient\Tests\Fixtures\Models');
-        $normalizer = new ObjectNormalizer(null, null, null, $propertyExtractor, null, null, $defaultContext);
+        $normalizer = new ObjectNormalizer(null, null, $propertyAccessor, $propertyExtractor, null, null, $defaultContext);
         $serializer = new Serializer(
             [
                 new JsonLDNormalizer($normalizer, $collection),

@@ -2,6 +2,8 @@
 
 namespace Bookboon\JsonLDClient\Mapping;
 
+use Bookboon\JsonLDClient\Client\JsonLDException;
+
 class MappingCollection
 {
     protected $defaultNamespace;
@@ -56,6 +58,17 @@ class MappingCollection
     public function getDefaultNamespace(): string
     {
         return $this->defaultNamespace;
+    }
+
+    public function findEndpointByClass(string $className) : MappingEndpoint
+    {
+        foreach ($this->mappings as $map) {
+            if ($map->matches($className)) {
+                return $map;
+            }
+        }
+
+        throw new JsonLDException('Not mapping for class: ' . $className);
     }
 
     /**

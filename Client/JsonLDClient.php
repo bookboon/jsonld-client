@@ -49,7 +49,7 @@ class JsonLDClient
     {
         $this->isValidObjectOrException($object);
 
-        $map = $this->lookupMapping(get_class($object));
+        $map = $this->_mappings->findEndpointByClass(get_class($object));
 
         $httpVerb = 'POST';
         $url = $map->getUrl($params);
@@ -74,7 +74,7 @@ class JsonLDClient
     {
         $this->isValidObjectOrException($object);
 
-        $map = $this->lookupMapping(get_class($object));
+        $map = $this->_mappings->findEndpointByClass(get_class($object));
 
         $url = sprintf('%s/%s', $map->getUrl($params), $object->getId());
 
@@ -87,7 +87,7 @@ class JsonLDClient
 
     public function getMany(string $className, array $params) : array
     {
-        $map = $this->lookupMapping($className);
+        $map = $this->_mappings->findEndpointByClass($className);
 
         $response = $this->makeRequest($map->getUrl($params),'GET', $params);
         $jsonContents = $response->getBody()->getContents();
@@ -101,7 +101,7 @@ class JsonLDClient
 
     public function getById(string $id, string $className, array $params = [], bool $useCache = false) : object
     {
-        $map = $this->lookupMapping($className);
+        $map = $this->_mappings->findEndpointByClass($className);
 
         $url = sprintf('%s/%s', $map->getUrl($params), $id);
         $jsonContents = null;
@@ -138,22 +138,6 @@ class JsonLDClient
     protected function getAccessToken(): ?AccessTokenInterface
     {
         return $this->accessToken;
-    }
-
-    /**
-     * @param string $className
-     * @return MappingEndpoint
-     * @throws JsonLDException
-     */
-    protected function lookupMapping(string $className) : MappingEndpoint
-    {
-        foreach ($this->_mappings->get() as $map) {
-            if ($map->matches($className)) {
-                return $map;
-            }
-        }
-
-        throw new JsonLDException('Not mapping for class: ' . $className);
     }
 
     /**
