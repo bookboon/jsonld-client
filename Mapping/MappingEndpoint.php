@@ -79,6 +79,7 @@ class MappingEndpoint
                 }
 
                 $url = str_replace($matches[$i - 1], $params[$matches[$i]], $url);
+                unset($params[$matches[$i]]);
             }
         }
 

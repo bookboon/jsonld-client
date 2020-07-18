@@ -2,8 +2,12 @@
 
 namespace Bookboon\JsonLDClient\Tests\Serializer;
 
+use Bookboon\JsonLDClient\Client\JsonLDException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularChild;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParent;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParentWithId;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DatedClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedArrayClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedClass;
@@ -200,5 +204,47 @@ class JsonLDNormalizerTest extends TestCase
         JSON;
 
         $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+    }
+
+    public function testCircularSerialize() : void
+    {
+        $serializer = SerializerHelper::create([]);
+        $expectJson = '{"@type":"CircularParentWithId","id":"232d2c41-278a-4377-bd9d-c6046494ceaf","children":[{"@type":"CircularChild","value":"some other string","parent":{"@type":"CircularParentWithId","@id":"232d2c41-278a-4377-bd9d-c6046494ceaf","id":"232d2c41-278a-4377-bd9d-c6046494ceaf"}},{"@type":"CircularChild","value":"different value","parent":{"@type":"CircularParentWithId","@id":"232d2c41-278a-4377-bd9d-c6046494ceaf","id":"232d2c41-278a-4377-bd9d-c6046494ceaf"}}]}';
+
+        $obj1 = new CircularChild();
+        $obj1->setValue('some other string');
+
+        $obj2 = new CircularChild();
+        $obj2->setValue('different value');
+
+        $parent = new CircularParentWithId();
+        $obj1->setParent($parent);
+        $obj2->setParent($parent);
+
+        $parent->setChildren([$obj1, $obj2]);
+
+        $testJson = $serializer->serialize($parent, JsonLDEncoder::FORMAT);
+
+        self::assertEquals($testJson, $expectJson);
+    }
+
+    public function testCircularSerialize_NoId() : void
+    {
+        $this->expectException(JsonLDException::class);
+        $serializer = SerializerHelper::create([]);
+
+        $obj1 = new CircularChild();
+        $obj1->setValue('some other string');
+
+        $obj2 = new CircularChild();
+        $obj2->setValue('different value');
+
+        $parent = new CircularParent();
+        $obj1->setParent($parent);
+        $obj2->setParent($parent);
+
+        $parent->setChildren([$obj1, $obj2]);
+
+        $serializer->serialize($parent, JsonLDEncoder::FORMAT);
     }
 }

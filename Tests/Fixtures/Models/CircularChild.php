@@ -1,11 +1,10 @@
 <?php
 
-
 namespace Bookboon\JsonLDClient\Tests\Fixtures\Models;
 
-
-class SimpleClass
+class CircularChild
 {
+    protected $parent;
     protected $value;
 
     /**
@@ -25,8 +24,22 @@ class SimpleClass
         $this->value = $value;
     }
 
-    public function getId() : string
+    /**
+     * @return CircularParent|null
+     */
+    public function getParent() : ?CircularParent
     {
-        return '232d2c41-278a-4377-bd9d-c6046494ceaf';
+        return $this->parent;
     }
+
+    /**
+     * @param CircularParent|null $parent
+     * @return void
+     */
+    public function setParent(?CircularParent$parent): void
+    {
+        $this->parent = $parent;
+    }
+
+
 }

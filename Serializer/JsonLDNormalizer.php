@@ -15,6 +15,7 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
 {
     private $collection;
     private $normalizer;
+    private $circularReferenceHandler;
 
     public function __construct(
         ObjectNormalizer $normalizer,
@@ -22,10 +23,15 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
     ) {
         $this->normalizer = $normalizer;
         $this->collection = $collection;
+        $this->circularReferenceHandler = new JsonLDCircularReferenceHandler();
     }
 
     public function normalize($data, $format = null, array $context = [])
     {
+        $context[ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER] =
+            $context[ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER] ??
+            $this->circularReferenceHandler;
+
         /* Check if we're dealing with multiple objects */
         if (is_array($data)) {
             $returnArray = [];

@@ -1,7 +1,4 @@
 services:
-  _defaults:
-    autowire: true
-
   Bookboon\JsonLDClient\Serializer\JsonLDEncoder:
     tags:
       - serializer.encoder
@@ -10,11 +7,32 @@ services:
     tags:
       - serializer.normalizer
 
+  jsonldclient.client:
+    class: GuzzleHttp\Client
+
+  jsonldclient.object_normalizer:
+    class: Symfony\Component\Serializer\Normalizer\ObjectNormalizer
+    arguments:
+      - null
+      - null
+      - '@property_accessor'
+      - '@property_info.php_doc_extractor'
+      - null
+      - null
+      - []
+    calls:
+      - [setSerializer, ['@serializer']]
+
   Bookboon\JsonLDClient\Serializer\JsonLDNormalizer:
+    arguments:
+      - '@jsonldclient.object_normalizer'
+      - '@Bookboon\JsonLDClient\Mapping\MappingCollection'
     tags:
       - serializer.normalizer
 
-  GuzzleHttp\ClientInterface:
-    class: GuzzleHttp\Client
-
-  Bookboon\JsonLDClient\Client\JsonLDClient: ~
+  Bookboon\JsonLDClient\Client\JsonLDClient:
+    arguments:
+      - '@jsonldclient.client'
+      - '@serializer'
+      - '@Bookboon\JsonLDClient\Mapping\MappingCollection'
+      - '@?jsonldclient.cache'
