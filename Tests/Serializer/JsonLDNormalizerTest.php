@@ -11,6 +11,7 @@ use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParentWithId;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DatedClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedArrayClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedClass;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedClassWithoutDoc;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\SimpleClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\SerializerHelper;
 use DateTime;
@@ -86,6 +87,28 @@ class JsonLDNormalizerTest extends TestCase
         $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
 
         self::assertInstanceOf(NestedClass::class, $object);
+        self::assertEquals("some random string", $object->getString());
+        self::assertInstanceOf(SimpleClass::class, $object->getSimpleClass());
+        self::assertEquals('some other string', $object->getSimpleClass()->getValue());
+    }
+
+    public function testNestedWithoutDocDeserialize() : void
+    {
+        $serializer = SerializerHelper::create([]);
+        $testJson = <<<JSON
+        {
+            "@type": "NestedClassWithoutDoc",
+            "string": "some random string",
+            "simpleClass": {
+                "@type": "SimpleClass",
+                "value": "some other string"
+            }
+        }
+        JSON;
+
+        $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+
+        self::assertInstanceOf(NestedClassWithoutDoc::class, $object);
         self::assertEquals("some random string", $object->getString());
         self::assertInstanceOf(SimpleClass::class, $object->getSimpleClass());
         self::assertEquals('some other string', $object->getSimpleClass()->getValue());
