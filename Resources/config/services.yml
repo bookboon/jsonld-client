@@ -10,13 +10,26 @@ services:
   jsonldclient.client:
     class: GuzzleHttp\Client
 
+  jsonldclient.property_extractor:
+    class: Symfony\Component\PropertyInfo\PropertyInfoExtractor
+    arguments:
+      - ['@property_info.php_doc_extractor', '@property_info.reflection_extractor']
+      - ['@property_info.php_doc_extractor', '@property_info.reflection_extractor']
+      - []
+      - []
+      - []
+
+  jsonldclient.property_accessor:
+    alias: 'property_accessor'
+    public: true
+
   jsonldclient.object_normalizer:
     class: Symfony\Component\Serializer\Normalizer\ObjectNormalizer
     arguments:
       - null
       - null
-      - '@property_accessor'
-      - '@property_info.php_doc_extractor'
+      - '@jsonldclient.property_accessor'
+      - '@jsonldclient.property_extractor'
       - null
       - null
       - []
