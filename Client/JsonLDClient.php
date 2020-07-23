@@ -61,7 +61,7 @@ class JsonLDClient
         $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
         $response = $this->makeRequest($url, $httpVerb, [], $jsonContents);
 
-        if ($this->_cache) {
+        if ($this->_cache && $object->getId()) {
             $this->_cache->delete($this->cacheKey($object->getId()));
         }
 
