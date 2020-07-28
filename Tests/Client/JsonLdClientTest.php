@@ -261,7 +261,14 @@ class JsonLdClientTest extends TestCase
         );
 
         $handlerStack = HandlerStack::create($this->mockHandler);
-        $client = new Client(['handler' => $handlerStack]);
+        $client = new Client(
+            [
+                'handler' => $handlerStack,
+                'headers' => [
+                    'User-Agent' => 'TestClient/0.3'
+                ]
+            ]
+        );
 
         return new JsonLDClient(
             $client,

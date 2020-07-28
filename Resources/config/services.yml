@@ -8,7 +8,9 @@ services:
       - serializer.normalizer
 
   jsonldclient.client:
-    class: GuzzleHttp\Client
+    class: GuzzleHttp\ClientInterface
+    factory: ['Bookboon\JsonLDClient\Client\GuzzleClientFactory', 'create']
+    arguments: ['@request_stack']
 
   jsonldclient.property_extractor:
     class: Symfony\Component\PropertyInfo\PropertyInfoExtractor
