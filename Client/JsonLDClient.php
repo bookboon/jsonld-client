@@ -66,7 +66,8 @@ class JsonLDClient
         }
 
         return $this->deserialize(
-            $response->getBody()->getContents()
+            $response->getBody()->getContents(),
+            get_class($object)
         );
     }
 
@@ -96,7 +97,7 @@ class JsonLDClient
             return [];
         }
 
-        return $this->deserialize($jsonContents);
+        return $this->deserialize($jsonContents, $className);
     }
 
     public function getById(string $id, string $className, array $params = [], bool $useCache = false) : object
@@ -120,7 +121,7 @@ class JsonLDClient
             $this->_cache->set($cacheKey, $jsonContents, self::CACHE_TIME);
         }
 
-        return $this->deserialize($jsonContents);
+        return $this->deserialize($jsonContents, $className);
     }
 
     /**
