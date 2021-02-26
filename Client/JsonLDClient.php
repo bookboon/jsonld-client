@@ -38,27 +38,56 @@ class JsonLDClient
         SerializerInterface $serializer,
         MappingCollection $mappings,
         ?CacheInterface $cache
-    ) {
+    )
+    {
         $this->_client = $client;
         $this->_serializer = $serializer;
         $this->_mappings = $mappings;
         $this->_cache = $cache;
     }
 
-    public function persist(object $object, array $params = []) : object
+    /**
+     * @param object $object
+     * @param array $params
+     * @return object
+     * @throws JsonLDException
+     * @throws JsonLDNotFoundException
+     * @throws JsonLDResponseException
+     * @throws JsonLDSerializationException
+     * @deprecated
+     *
+     */
+    public function persist(object $object, array $params = []): object
     {
         $this->isValidObjectOrException($object);
 
-        $map = $this->_mappings->findEndpointByClass(get_class($object));
-
         $httpVerb = 'POST';
-        $url = $map->getUrl($params);
+        $url = $this->getUrl($object, $params);
         if ($object->getId()) {
             $httpVerb = 'PUT';
             $url .= '/' . $object->getId();
         }
 
+        return $this->prepareRequest($object, $httpVerb, $url, $params);
+    }
+
+    public function create(object $object, array $params = []): object
+    {
+        return $this->prepareRequest($object, "POST", $this->getUrl($object, $params), $params);
+    }
+
+    public function update(object $object, array $params = [])
+    {
+        $url = $this->getUrl($object, $params) . '/' . $object->getId();
+
+        return $this->prepareRequest($object, "PUT", $url, $params);
+    }
+
+    private function prepareRequest(object $object, string $httpVerb, string $url = null, array $params = []): object
+    {
+
         $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
+
         $response = $this->makeRequest($url, $httpVerb, [], $jsonContents);
 
         if ($this->_cache && $object->getId()) {
@@ -70,7 +99,16 @@ class JsonLDClient
         );
     }
 
-    public function delete(object $object, array $params = []) : void
+    private function getUrl(object $object, array $params = []) : string
+    {
+        $this->isValidObjectOrException($object);
+
+        $map = $this->_mappings->findEndpointByClass(get_class($object));
+
+        return $map->getUrl($params);
+    }
+
+    public function delete(object $object, array $params = []): void
     {
         $this->isValidObjectOrException($object);
 
@@ -85,11 +123,11 @@ class JsonLDClient
         }
     }
 
-    public function getMany(string $className, array $params) : array
+    public function getMany(string $className, array $params): array
     {
         $map = $this->_mappings->findEndpointByClass($className);
 
-        $response = $this->makeRequest($map->getUrl($params),'GET', $params);
+        $response = $this->makeRequest($map->getUrl($params), 'GET', $params);
         $jsonContents = $response->getBody()->getContents();
 
         if ($jsonContents === '[]' || $jsonContents === "[]\n") {
@@ -99,7 +137,7 @@ class JsonLDClient
         return $this->deserialize($jsonContents);
     }
 
-    public function getById(string $id, string $className, array $params = [], bool $useCache = false) : object
+    public function getById(string $id, string $className, array $params = [], bool $useCache = false): object
     {
         $map = $this->_mappings->findEndpointByClass($className);
 
@@ -127,7 +165,7 @@ class JsonLDClient
      * @param AccessTokenInterface|null $token
      * @return void
      */
-    public function setAccessToken(?AccessTokenInterface $token) : void
+    public function setAccessToken(?AccessTokenInterface $token): void
     {
         $this->accessToken = $token;
     }
@@ -154,7 +192,8 @@ class JsonLDClient
         string $httpVerb = 'GET',
         array $queryParams = [],
         ?string $jsonContents = null
-    ) : ResponseInterface {
+    ): ResponseInterface
+    {
 
         $headers = [
             'Accept-Encoding' => 'application/json',
@@ -194,7 +233,8 @@ class JsonLDClient
                         ApiErrorResponse::class,
                         'json'
                     );
-                } catch (JsonLDSerializationException $e2) {}
+                } catch (JsonLDSerializationException $e2) {
+                }
 
                 throw new JsonLDResponseException(
                     $e->getMessage(),
@@ -213,7 +253,7 @@ class JsonLDClient
      * @return void
      * @throws JsonLDException
      */
-    protected function isValidObjectOrException(object $object) : void
+    protected function isValidObjectOrException(object $object): void
     {
         if (false === method_exists($object, 'getId')) {
             throw new JsonLDException('Cannot persist object without getId method');
@@ -225,7 +265,7 @@ class JsonLDClient
      * @param string|null $unique
      * @return string
      */
-    protected function cacheKey(string $id, ?string $unique = null) : string
+    protected function cacheKey(string $id, ?string $unique = null): string
     {
         return $unique ? "jsonld_{$unique}_{$id}" : "jsonld_{$id}";
     }
