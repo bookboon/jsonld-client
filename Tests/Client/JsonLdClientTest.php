@@ -142,6 +142,48 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
+    public function testPersist_Update() : void
+    {
+        $testJson = <<<JSON
+        {
+            "@type": "SimpleClass",
+            "value": "test value 3"
+        }
+        JSON;
+
+        $testObject = new SimpleClass();
+        $testObject->setValue("test value 2");
+
+        $client = $this->getClient($testJson);
+        $entity = $client->update($testObject);
+
+        self::assertInstanceOf(SimpleClass::class, $entity);
+        self::assertEquals('test value 3', $entity->getValue());
+        self::assertEquals("PUT", $this->mockHandler->getLastRequest()->getMethod());
+        self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
+    }
+
+    public function testPersist_Create() : void
+    {
+        $testJson = <<<JSON
+        {
+            "@type": "SimpleClass",
+            "value": "test value 3"
+        }
+        JSON;
+
+        $testObject = new SimpleClass();
+        $testObject->setValue("test value 3");
+
+        $client = $this->getClient($testJson);
+        $entity = $client->create($testObject);
+
+        self::assertInstanceOf(SimpleClass::class, $entity);
+        self::assertEquals('test value 3', $entity->getValue());
+        self::assertEquals("POST", $this->mockHandler->getLastRequest()->getMethod());
+        self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
+    }
+
     public function testDelete_Success() : void
     {
         $testObject = new SimpleClass();

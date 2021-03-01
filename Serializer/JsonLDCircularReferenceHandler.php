@@ -14,7 +14,12 @@ class JsonLDCircularReferenceHandler
 
         $id = $object->getId();
         $shortClass = get_class($object);
-        if (($lastPos = strrpos(get_class($object), "\\")) !== false) {
+
+        if (false == $shortClass) {
+            throw new JsonLDException('Cannot get classname');
+        }
+
+        if (($lastPos = strrpos($shortClass, "\\")) !== false) {
             $shortClass = substr($shortClass, 1 + $lastPos);
         }
 
