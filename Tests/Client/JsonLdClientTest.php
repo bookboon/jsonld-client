@@ -119,7 +119,6 @@ class JsonLdClientTest extends TestCase
 
         self::assertCount(2, $entities);
         self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
-
     }
 
     public function testPersist_Success() : void

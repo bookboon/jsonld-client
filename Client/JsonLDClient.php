@@ -5,6 +5,7 @@ namespace Bookboon\JsonLDClient\Client;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Models\ApiErrorResponse;
+use Bookboon\JsonLDClient\Models\ApiIterable;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
 use Exception;
 use GuzzleHttp\ClientInterface;
@@ -123,18 +124,14 @@ class JsonLDClient
         }
     }
 
-    public function getMany(string $className, array $params): array
+    public function getMany(string $className, array $params): ApiIterable
     {
         $map = $this->_mappings->findEndpointByClass($className);
-
-        $response = $this->makeRequest($map->getUrl($params), 'GET', $params);
-        $jsonContents = $response->getBody()->getContents();
-
-        if ($jsonContents === '[]' || $jsonContents === "[]\n") {
-            return [];
-        }
-
-        return $this->deserialize($jsonContents);
+        return new ApiIterable(
+            fn(array $params2) => $this->makeRequest($map->getUrl($params), 'GET', $params2),
+            fn(string $data) => $this->deserialize($data),
+            $params
+        );
     }
 
     public function getById(string $id, string $className, array $params = [], bool $useCache = false): object
