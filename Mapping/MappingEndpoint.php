@@ -23,7 +23,7 @@ class MappingEndpoint
      * @param string $className
      * @return boolean
      */
-    public function matches(string $className) : bool
+    public function matches(string $className): bool
     {
         if ($this->getType() === $className) {
             return true;
@@ -43,7 +43,7 @@ class MappingEndpoint
         return false;
     }
 
-    public function matchesShortName(string $shortClass) : bool
+    public function matchesShortName(string $shortClass): bool
     {
         $expectClassNameParts = explode('\\', $this->getType());
         $expectShortName = array_pop($expectClassNameParts);
@@ -68,25 +68,20 @@ class MappingEndpoint
     {
         $url = rtrim($this->uri, '/');
         $matches = [];
-        if (preg_match('/\{([A-z0-9_-]+)\}/', $url, $matches)) {
-            for ($i = 0, $iMax = count($matches); $iMax > $i; $i++) {
-                if ($i % 2 === 0) {
-                    continue;
+        if (preg_match_all('/\{([A-z0-9_-]+)\}/', $url, $matches)) {
+            foreach ($matches[0] as $key => $singleMatch) {
+                if (!isset($matches[1][$key]) || !isset($params[$matches[1][$key]])) {
+                    throw new JsonLDException('Missing param: ' . $singleMatch);
                 }
 
-                if (!isset($params[$matches[$i]])) {
-                    throw new JsonLDException('Missing param: ' . $matches[$i]);
-                }
-
-                $url = str_replace($matches[$i - 1], $params[$matches[$i]], $url);
-                unset($params[$matches[$i]]);
+                $url = str_replace($singleMatch, $params[$matches[1][$key]], $url);
             }
         }
 
         return $url;
     }
 
-    protected function endsWith(string $haystack, string $needle) : bool
+    protected function endsWith(string $haystack, string $needle): bool
     {
         return substr($haystack, -strlen($needle)) === $needle;
     }

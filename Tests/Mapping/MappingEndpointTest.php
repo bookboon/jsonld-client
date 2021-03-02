@@ -56,6 +56,12 @@ class MappingEndpointTest extends TestCase
         self::assertEquals('http://test/testuuid/apisend', $endpoint->getUrl(['id' => 'testuuid']));
     }
 
+    public function testGetUrl_TwoIdsPaths() : void
+    {
+        $endpoint = new MappingEndpoint("App\\Entity\\ApiSend", '/api/v1/exams/{examId}/questions/{questionId}/answers');
+        self::assertEquals('/api/v1/exams/testexamid/questions/testquestionid/answers', $endpoint->getUrl(['examId' => 'testexamid', "questionId" => 'testquestionid']));
+    }
+
     public function testGetUrl_PathId_Missing() : void
     {
         $this->expectException(JsonLDException::class);
