@@ -6,7 +6,7 @@ namespace Bookboon\JsonLDClient\Tests\Fixtures\Models;
 
 class SimpleClass
 {
-    protected $value;
+    protected string $value = '';
 
     /**
      * @return string

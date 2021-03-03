@@ -13,7 +13,6 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class JsonLDClientExtension extends Extension
 {
-
     /**
      * Loads a specific configuration.
      *
@@ -21,10 +20,15 @@ class JsonLDClientExtension extends Extension
      * @param ContainerBuilder $container A ContainerBuilder instance
      *
      * @throws \InvalidArgumentException When provided tag is not defined in this extension
+     * @return void
      */
     public function load(array $configs, ContainerBuilder $container)
     {
-        $config = $this->processConfiguration($this->getConfiguration($configs, $container), $configs);
+        if (null !== $preConfig = $this->getConfiguration($configs, $container)) {
+            $config = $this->processConfiguration($preConfig, $configs);
+        } else {
+            throw new \RuntimeException('Bad stuff happened');
+        }
 
         $container->register(MappingCollection::class, MappingCollection::class)
             ->setFactory(array(MappingCollection::class, 'create'))

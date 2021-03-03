@@ -15,7 +15,10 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
 
     public const LINK_HEADER = 'Link';
 
+    /** @var callable(array): ResponseInterface */
     private $_makeRequest;
+
+    /** @var callable callable(string): (Array<object>|object) */
     private $_deserialize;
     private array $_params;
 
@@ -50,7 +53,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
         }
     }
 
-    protected function makeRequest(int $offset)
+    protected function makeRequest(int $offset) : void
     {
         $makeRequest = $this->_makeRequest;
         $deserialize = $this->_deserialize;

@@ -6,8 +6,8 @@ use Bookboon\JsonLDClient\Client\JsonLDException;
 
 class MappingEndpoint
 {
-    protected $type;
-    protected $uri;
+    protected string $type;
+    protected string $uri;
 
     public function __construct(string $type, string $uri)
     {

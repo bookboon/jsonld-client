@@ -3,7 +3,6 @@
 namespace Bookboon\JsonLDClient\Client;
 
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
-use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Models\ApiErrorResponse;
 use Bookboon\JsonLDClient\Models\ApiIterable;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
@@ -20,12 +19,12 @@ class JsonLDClient
 {
     private const CACHE_TIME = 1800;
 
-    private $_serializer;
-    private $_mappings;
-    private $_cache;
-    private $_client;
+    private SerializerInterface $_serializer;
+    private MappingCollection $_mappings;
+    private ?CacheInterface $_cache = null;
+    private ClientInterface $_client;
 
-    private $accessToken;
+    private ?AccessTokenInterface $accessToken = null;
 
     /**
      * JsonLdClient constructor.
@@ -77,26 +76,29 @@ class JsonLDClient
         return $this->prepareRequest($object, "POST", $this->getUrl($object, $params), $params);
     }
 
-    public function update(object $object, array $params = [])
+    public function update(object $object, array $params = []) : object
     {
         $url = $this->getUrl($object, $params) . '/' . $object->getId();
 
         return $this->prepareRequest($object, "PUT", $url, $params);
     }
 
-    private function prepareRequest(object $object, string $httpVerb, string $url = null, array $params = [])
+    private function prepareRequest(object $object, string $httpVerb, string $url, array $params = []) : object
     {
         $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
 
-        $response = $this->makeRequest($url, $httpVerb, [], $jsonContents);
+        $response = $this->makeRequest($url, $httpVerb, $params, $jsonContents);
 
         if ($this->_cache && $object->getId()) {
             $this->_cache->delete($this->cacheKey($object->getId()));
         }
 
-        return $this->deserialize(
+        /** @var object $object */
+        $object = $this->deserialize(
             $response->getBody()->getContents()
         );
+
+        return $object;
     }
 
     private function getUrl(object $object, array $params = []) : string
@@ -199,8 +201,8 @@ class JsonLDClient
             'Content-Type' => 'application/json'
         ];
 
-        if ($this->accessToken !== null) {
-            $headers['Authorization'] = "Bearer {$this->getAccessToken()->getToken()}";
+        if (null !== $token = $this->accessToken) {
+            $headers['Authorization'] = "Bearer {$token->getToken()}";
         }
 
         $requestParams = [
@@ -219,8 +221,8 @@ class JsonLDClient
                 $requestParams
             );
         } catch (RequestException $e) {
-            if ($e->hasResponse()) {
-                if ($e->getResponse()->getStatusCode() === 404) {
+            if ($e->hasResponse() && null !== $response = $e->getResponse()) {
+                if ($response->getStatusCode() === 404) {
                     throw new JsonLDNotFoundException();
                 }
 
@@ -229,7 +231,7 @@ class JsonLDClient
                 try {
                     /** @var ApiErrorResponse $errorResponse */
                     $errorResponse = $this->deserialize(
-                        $e->getResponse()->getBody()->getContents(),
+                        $response->getBody()->getContents(),
                         ApiErrorResponse::class,
                         'json'
                     );
@@ -238,7 +240,7 @@ class JsonLDClient
 
                 throw new JsonLDResponseException(
                     $e->getMessage(),
-                    $e->getResponse()->getStatusCode(),
+                    $response->getStatusCode(),
                     $e,
                     $errorResponse
                 );

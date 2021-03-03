@@ -4,8 +4,8 @@ namespace Bookboon\JsonLDClient\Tests\Fixtures\Models;
 
 class CircularChild
 {
-    protected $parent;
-    protected $value;
+    protected ?CircularParent $parent = null;
+    protected string $value = '';
 
     /**
      * @return string

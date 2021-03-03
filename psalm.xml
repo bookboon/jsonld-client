@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <psalm
-    errorLevel="4"
+    errorLevel="3"
     resolveFromConfigFile="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
@@ -8,16 +8,26 @@
 >
     <projectFiles>
         <directory name="Client" />
+        <directory name="Helpers" />
         <directory name="DependencyInjection" />
         <directory name="Mapping" />
         <directory name="Models" />
         <directory name="Serializer" />
         <directory name="Tests" />
+
         <file name="JsonLDClientBundle.php" />
         <ignoreFiles>
             <directory name="vendor" />
+            <file name="DependencyInjection/Configuration.php"/>
         </ignoreFiles>
     </projectFiles>
+    <issueHandlers>
+        <UnusedMethod errorLevel="error" />
+        <DocblockTypeContradiction errorLevel="error" />
+        <MissingConstructor errorLevel="error" />
+        <MissingPropertyType errorLevel="error" />
+        <MissingReturnType errorLevel="error" />
+    </issueHandlers>
     <plugins>
         <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
     </plugins>
