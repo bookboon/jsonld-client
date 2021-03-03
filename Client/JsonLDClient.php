@@ -47,9 +47,10 @@ class JsonLDClient
     }
 
     /**
-     * @param object $object
+     * @template T
+     * @param T $object
      * @param array $params
-     * @return object
+     * @return T
      * @throws JsonLDException
      * @throws JsonLDNotFoundException
      * @throws JsonLDResponseException
@@ -57,7 +58,7 @@ class JsonLDClient
      * @deprecated
      *
      */
-    public function persist(object $object, array $params = []): object
+    public function persist($object, array $params = [])
     {
         $this->isValidObjectOrException($object);
 
@@ -71,43 +72,34 @@ class JsonLDClient
         return $this->prepareRequest($object, $httpVerb, $url, $params);
     }
 
-    public function create(object $object, array $params = []): object
+    /**
+     * @template T
+     * @param T $object
+     * @param array $params
+     * @return T
+     * @throws JsonLDNotFoundException
+     * @throws JsonLDResponseException
+     * @throws JsonLDSerializationException
+     */
+    public function create($object, array $params = [])
     {
         return $this->prepareRequest($object, "POST", $this->getUrl($object, $params), $params);
     }
 
-    public function update(object $object, array $params = []) : object
+    /**
+     * @template T
+     * @param T $object
+     * @param array $params
+     * @return T
+     * @throws JsonLDNotFoundException
+     * @throws JsonLDResponseException
+     * @throws JsonLDSerializationException
+     */
+    public function update($object, array $params = [])
     {
         $url = $this->getUrl($object, $params) . '/' . $object->getId();
 
         return $this->prepareRequest($object, "PUT", $url, $params);
-    }
-
-    private function prepareRequest(object $object, string $httpVerb, string $url, array $params = []) : object
-    {
-        $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
-
-        $response = $this->makeRequest($url, $httpVerb, $params, $jsonContents);
-
-        if ($this->_cache && $object->getId()) {
-            $this->_cache->delete($this->cacheKey($object->getId()));
-        }
-
-        /** @var object $object */
-        $object = $this->deserialize(
-            $response->getBody()->getContents()
-        );
-
-        return $object;
-    }
-
-    private function getUrl(object $object, array $params = []) : string
-    {
-        $this->isValidObjectOrException($object);
-
-        $map = $this->_mappings->findEndpointByClass(get_class($object));
-
-        return $map->getUrl($params);
     }
 
     public function delete(object $object, array $params = []): void
@@ -125,17 +117,40 @@ class JsonLDClient
         }
     }
 
+    /**
+     * @template T
+     * @psalm-param class-string<T> $className
+     * @param array $params
+     * @return ApiIterable<T>
+     * @throws JsonLDException
+     */
     public function getMany(string $className, array $params): ApiIterable
     {
         $map = $this->_mappings->findEndpointByClass($className);
-        return new ApiIterable(
+
+        /** @var ApiIterable<T> $iter */
+        $iter = new ApiIterable(
             fn(array $params2) => $this->makeRequest($map->getUrl($params), 'GET', $params2),
             fn(string $data) => $this->deserialize($data),
             $params
         );
+
+        return $iter;
     }
 
-    public function getById(string $id, string $className, array $params = [], bool $useCache = false): object
+    /**
+     * @template T
+     * @param string $id
+     * @psalm-param class-string<T> $className
+     * @param array $params
+     * @param bool $useCache
+     * @return T
+     * @throws JsonLDException
+     * @throws JsonLDNotFoundException
+     * @throws JsonLDResponseException
+     * @throws JsonLDSerializationException
+     */
+    public function getById(string $id, string $className, array $params = [], bool $useCache = false)
     {
         $map = $this->_mappings->findEndpointByClass($className);
 
@@ -156,7 +171,7 @@ class JsonLDClient
             $this->_cache->set($cacheKey, $jsonContents, self::CACHE_TIME);
         }
 
-        /** @var object $object */
+        /** @var T $object */
         $object = $this->deserialize($jsonContents);
 
         return $object;
@@ -177,6 +192,44 @@ class JsonLDClient
     protected function getAccessToken(): ?AccessTokenInterface
     {
         return $this->accessToken;
+    }
+
+    /**
+     * @template T
+     * @param T $object
+     * @param string $httpVerb
+     * @param string $url
+     * @param array $params
+     * @return T
+     * @throws JsonLDNotFoundException
+     * @throws JsonLDResponseException
+     * @throws JsonLDSerializationException
+     */
+    protected function prepareRequest($object, string $httpVerb, string $url, array $params = [])
+    {
+        $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
+
+        $response = $this->makeRequest($url, $httpVerb, $params, $jsonContents);
+
+        if ($this->_cache && $object->getId()) {
+            $this->_cache->delete($this->cacheKey($object->getId()));
+        }
+
+        /** @var T $object */
+        $object = $this->deserialize(
+            $response->getBody()->getContents()
+        );
+
+        return $object;
+    }
+
+    protected function getUrl(object $object, array $params = []) : string
+    {
+        $this->isValidObjectOrException($object);
+
+        $map = $this->_mappings->findEndpointByClass(get_class($object));
+
+        return $map->getUrl($params);
     }
 
     /**

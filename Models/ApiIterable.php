@@ -8,6 +8,13 @@ use Countable;
 use Iterator;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * Class ApiIterable
+ * @package Bookboon\JsonLDClient\Models
+ * @template T
+ * @template-implements ArrayAccess<int,T>
+ * @template-implements Iterator<int,T>
+ */
 class ApiIterable implements ArrayAccess, Iterator, Countable
 {
     public const OFFSET = 'offset';
@@ -18,15 +25,16 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     /** @var callable(array): ResponseInterface */
     private $_makeRequest;
 
-    /** @var callable callable(string): (Array<object>|object) */
+    /** @var callable callable(string): (Array<T>|T) */
     private $_deserialize;
     private array $_params;
 
     private int $requestLimit = 10;
 
     private int $position = 0;
-    /*
+    /**
      * Contains batches, e.g. with requestLimit = 10 that would get [0 => [...], 10 => [...]]
+     * @var array<int, array<int,T>>
      */
     private array $results = [];
     private bool $isIterationDisabled = false;
@@ -36,7 +44,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     /**
      * ApiIterable constructor.
      * @param callable(array): ResponseInterface $makeRequest
-     * @param callable(string): (Array<object>|object) $deserialize
+     * @param callable(string): (array<T>|T) $deserialize
      * @param Array<string,string|int> $params
      */
     public function __construct(callable $makeRequest, callable $deserialize, array $params)
@@ -77,7 +85,12 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
         }
     }
 
-    protected function locate(int $offset) : ?object
+    /**
+     * @param integer $offset
+     * @psalm-return T|null
+     * @return object|null
+     */
+    protected function locate(int $offset)
     {
         $batchKey = ((int) floor($offset / $this->requestLimit)) * $this->requestLimit;
 
@@ -95,69 +108,90 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function current()
     {
         return $this->locate($this->position);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function next()
     {
         ++$this->position;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function key()
     {
         return $this->position;
     }
 
     /**
-     * Return valid if entity exists or tries to query if out of batch.
-     * If null is encountered within a batch then end loop by returning false
-     *
-     * @return boolean
+     * {@inheritDoc}
      */
     public function valid()
     {
         return $this->locate($this->position) !== null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function rewind()
     {
         $this->position = 0;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return bool
+     *
+     * @psalm-param int $offset
+     */
     public function offsetExists($offset)
     {
-        if (is_int($offset)) {
-            return $this->locate($this->position) !== null;
-        }
-
-        return false;
+        return $this->locate($this->position) !== null;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @psalm-param int $offset
+     */
     public function offsetGet($offset)
     {
-        if (is_int($offset)) {
-            return $this->locate($offset);
-        }
-
-        return null;
+        return $this->locate($offset);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function offsetSet($offset, $value)
     {
         // Not implemented by design
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function offsetUnset($offset)
     {
         // Not implemented by design
     }
 
     /**
+     * {@inheritDoc}
+     *
      * Returns count of already fetched items, not all remote
      *
-     * @return integer
+     * @return int
      */
     public function count()
     {
