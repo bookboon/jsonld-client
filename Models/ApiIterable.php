@@ -30,8 +30,8 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     /**
      * ApiIterable constructor.
      * @param callable(array): ResponseInterface $makeRequest
-     * @param callable(string): array $deserialize
-     * @param Array<string,string> $params
+     * @param callable(string): (Array<object>|object) $deserialize
+     * @param Array<string,string|int> $params
      */
     public function __construct(callable $makeRequest, callable $deserialize, array $params)
     {

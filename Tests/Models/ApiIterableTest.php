@@ -37,7 +37,7 @@ class ApiIterableTest extends TestCase
                 $calledCount += 1;
                 return new Response();
             },
-            fn(string $data) => ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'],
+            fn(string $data) => $this->generateLetters('a', 'j'),
             []
         );
 

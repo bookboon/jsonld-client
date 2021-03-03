@@ -1,7 +1,6 @@
 language: php
 
 php:
-  - 7.3
   - 7.4
 
 env:
@@ -13,8 +12,10 @@ jobs:
     - stage: "Tests"
       name: "Unit Tests"
       script: vendor/bin/phpunit -c . --coverage-clover build/logs/clover.xml
-    - name: "Static Analyser"
+    - name: "phpstan"
       script: vendor/bin/phpstan analyse -c phpstan.neon
+    - name: "psalm"
+      script: vendor/bin/psalm
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter

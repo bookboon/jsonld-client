@@ -17,7 +17,9 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use League\OAuth2\Client\Token\AccessToken;
+use Hoa\Iterator\Mock;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\CacheInterface;
 
@@ -211,6 +213,7 @@ class JsonLdClientTest extends TestCase
         }
         JSON;
 
+        /** @var Stub&CacheInterface $cacheStub */
         $cacheStub = $this->createStub(CacheInterface::class);
         $cacheStub->method('get')
             ->willReturn($testJson);
@@ -236,6 +239,7 @@ class JsonLdClientTest extends TestCase
         }
         JSON;
 
+        /** @var MockObject&CacheInterface $cacheStub */
         $cacheStub = $this->createStub(CacheInterface::class);
         $cacheStub->method('get')
             ->willReturn(null);
@@ -262,6 +266,7 @@ class JsonLdClientTest extends TestCase
         }
         JSON;
 
+        /** @var MockObject&CacheInterface $cacheStub */
         $cacheStub = $this->createStub(CacheInterface::class);
         $cacheStub->expects(self::once())
             ->method('delete');
@@ -282,6 +287,7 @@ class JsonLdClientTest extends TestCase
         $testObject = new SimpleClass();
         $testObject->setValue("test value 2");
 
+        /** @var MockObject&CacheInterface $cacheStub */
         $cacheStub = $this->createStub(CacheInterface::class);
         $cacheStub->expects(self::once())
             ->method('delete');

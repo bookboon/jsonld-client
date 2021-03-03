@@ -26,24 +26,24 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
         $this->circularReferenceHandler = new JsonLDCircularReferenceHandler();
     }
 
-    public function normalize($data, $format = null, array $context = [])
+    public function normalize($object, $format = null, array $context = [])
     {
         $context[ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER] =
             $context[ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER] ??
             $this->circularReferenceHandler;
 
         /* Check if we're dealing with multiple objects */
-        if (is_array($data)) {
+        if (is_array($object)) {
             $returnArray = [];
 
-            foreach ($data as $item) {
+            foreach ($object as $item) {
                 $returnArray[] = $this->normalizeItem($item, $format, $context);
             }
 
             return $returnArray;
         }
 
-        return $this->normalizeItem($data, $format, $context);
+        return $this->normalizeItem($object, $format, $context);
     }
 
     public function supportsNormalization($data, $format = null, array $context = [])
@@ -63,14 +63,14 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
             in_array($type, [ApiErrorResponse::class, ApiError::class. '[]'], true);
     }
 
-    public function denormalize($data, $class, $format = null, array $context = [])
+    public function denormalize($data, $type, $format = null, array $context = [])
     {
         /* Check if we're dealing with multiple objects */
         if ($this->isDataArray($data)) {
             $returnArray = [];
 
             foreach ($data as $item) {
-                if ($class === ApiError::class . '[]') {
+                if ($type === ApiError::class . '[]') {
                     $item['@type'] = 'ApiError';
                 }
 
@@ -80,7 +80,7 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
             return $returnArray;
         }
 
-        if ($class === ApiErrorResponse::class) {
+        if ($type === ApiErrorResponse::class) {
             $data['@type'] = 'ApiErrorResponse';
         }
 

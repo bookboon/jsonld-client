@@ -84,9 +84,8 @@ class JsonLDClient
         return $this->prepareRequest($object, "PUT", $url, $params);
     }
 
-    private function prepareRequest(object $object, string $httpVerb, string $url = null, array $params = []): object
+    private function prepareRequest(object $object, string $httpVerb, string $url = null, array $params = [])
     {
-
         $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
 
         $response = $this->makeRequest($url, $httpVerb, [], $jsonContents);
@@ -155,7 +154,10 @@ class JsonLDClient
             $this->_cache->set($cacheKey, $jsonContents, self::CACHE_TIME);
         }
 
-        return $this->deserialize($jsonContents);
+        /** @var object $object */
+        $object = $this->deserialize($jsonContents);
+
+        return $object;
     }
 
     /**
@@ -225,6 +227,7 @@ class JsonLDClient
                 $errorResponse = null;
 
                 try {
+                    /** @var ApiErrorResponse $errorResponse */
                     $errorResponse = $this->deserialize(
                         $e->getResponse()->getBody()->getContents(),
                         ApiErrorResponse::class,
@@ -271,7 +274,7 @@ class JsonLDClient
      * @param string $jsonContents
      * @param string $type
      * @param string $format
-     * @return array|object
+     * @return array<object>|object
      * @throws JsonLDSerializationException
      */
     protected function deserialize(string $jsonContents, string $type = '', string $format = JsonLDEncoder::FORMAT)
