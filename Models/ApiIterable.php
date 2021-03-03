@@ -3,6 +3,7 @@
 namespace Bookboon\JsonLDClient\Models;
 
 use ArrayAccess;
+use Bookboon\JsonLDClient\Helpers\LinkParser;
 use Countable;
 use Iterator;
 use Psr\Http\Message\ResponseInterface;
@@ -25,7 +26,9 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
      * Contains batches, e.g. with requestLimit = 10 that would get [0 => [...], 10 => [...]]
      */
     private array $results = [];
-    private ?bool $isIterable = null;
+    private bool $isIterationDisabled = false;
+    private bool $hasRequested = false;
+    private ?LinkParser $link = null;
 
     /**
      * ApiIterable constructor.
@@ -43,7 +46,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
         }
 
         if (array_key_exists(self::OFFSET, $this->_params)) {
-            $this->isIterable = false;
+            $this->isIterationDisabled = true;
         }
     }
 
@@ -59,10 +62,11 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
         );
 
         $link = $response->getHeader(static::LINK_HEADER);
-        if (count($link) !== 0 && $this->isIterable === null) {
-            $this->isIterable = true;
+        if (false === $this->hasRequested && isset($link[0]) && is_string($link[0])) {
+            $this->link = new LinkParser($link[0]);
         }
 
+        $this->hasRequested = true;
         $jsonContents = $response->getBody()->getContents();
 
         if ($jsonContents !== '[]' && $jsonContents !== "[]\n") {
@@ -78,8 +82,9 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
             return $this->results[$batchKey][$offset % $this->requestLimit];
         }
 
-        if ($offset === 0 ||
-            ($this->isIterable !== false && false === isset($this->results[$batchKey]))) {
+        if (!$this->hasRequested ||
+            ($this->link !== null && !array_key_exists($batchKey, $this->results) && !$this->isIterationDisabled)
+        ) {
             $this->makeRequest($batchKey);
             return $this->locate($offset);
         }
@@ -153,13 +158,20 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
      */
     public function count()
     {
-        if (count($this->results) === 0) {
+        if (false === $this->hasRequested) {
             $this->makeRequest(0);
         }
 
         $count = 0;
-        foreach ($this->results as $result) {
-            $count += count($result);
+
+        if ($this->link !== null) {
+            $count = $this->link->offset(LinkParser::LAST) ?? 0;
+        }
+
+        if ($count === 0) {
+            foreach ($this->results as $result) {
+                $count += count($result);
+            }
         }
 
         return $count;

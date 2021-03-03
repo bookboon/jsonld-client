@@ -2,13 +2,14 @@
 
 namespace Bookboon\JsonLDClient\Tests\Models;
 
+use Bookboon\JsonLDClient\Helpers\LinkParser;
 use Bookboon\JsonLDClient\Models\ApiIterable;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
 class ApiIterableTest extends TestCase
 {
-    public function testEmpty()
+    public function testEmpty() : void
     {
         $calledCount = 0;
 
@@ -28,7 +29,7 @@ class ApiIterableTest extends TestCase
         self::assertEquals(1, $calledCount);
     }
 
-    public function testHasResultsLt10()
+    public function testHasResultsLt10() : void
     {
         $calledCount = 0;
 
@@ -48,7 +49,7 @@ class ApiIterableTest extends TestCase
         self::assertEquals(1, $calledCount);
     }
 
-    public function testHasResultsGt10()
+    public function testHasResultsGt10() : void
     {
         $calledCount = 0;
 
@@ -71,7 +72,7 @@ class ApiIterableTest extends TestCase
         self::assertEquals(2, $calledCount);
     }
 
-    public function testHasResultsGt20()
+    public function testHasResultsGt20() : void
     {
         $calledCount = 0;
 
@@ -101,7 +102,7 @@ class ApiIterableTest extends TestCase
         self::assertEquals(3, $calledCount);
     }
 
-    public function testGetSpecificOffset()
+    public function testGetSpecificOffset() : void
     {
         $calledCount = 0;
 
@@ -124,6 +125,59 @@ class ApiIterableTest extends TestCase
         }
 
         self::assertCount(3, $array);
+        self::assertEquals(1, $calledCount);
+    }
+
+    public function testGetSpecificOffsetZero() : void
+    {
+        $calledCount = 0;
+
+        $array = new ApiIterable(
+            function (array $params) use (&$calledCount) {
+                $calledCount += 1;
+                self::assertEquals(10, $params[ApiIterable::LIMIT]);
+                self::assertEquals(0, $params[ApiIterable::OFFSET]);
+                return new Response(200, [ApiIterable::LINK_HEADER => ['Test']]);
+            },
+            function (string $data) {
+                return $this->generateLetters('k', 'm');
+            },
+            [ApiIterable::OFFSET => 0]
+        );
+
+        $items = [];
+        foreach ($array as $item) {
+            $items[] = $item;
+        }
+
+        self::assertCount(3, $array);
+        self::assertEquals(1, $calledCount);
+    }
+
+    public function testGetCountFromRemoteCollection() : void
+    {
+        $calledCount = 0;
+        $link = '<http://test.com/entity?offset=0&limit=100>; rel="first",<http://test.com/entity?offset=1800&limit=100>; rel="last",<http://test.com/entity?offset=100&limit=100>; rel="next"';
+
+        $array = new ApiIterable(
+            function (array $params) use (&$calledCount, $link) {
+                $calledCount += 1;
+                self::assertEquals(10, $params[ApiIterable::LIMIT]);
+                self::assertEquals(0, $params[ApiIterable::OFFSET]);
+                return new Response(200, [ApiIterable::LINK_HEADER => [$link]]);
+            },
+            function (string $data) {
+                return $this->generateLetters('k', 'm');
+            },
+            []
+        );
+
+        $items = [];
+        foreach ($array as $item) {
+            $items[] = $item;
+        }
+
+        self::assertCount(1800, $array);
         self::assertEquals(1, $calledCount);
     }
 
