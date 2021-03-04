@@ -4,8 +4,8 @@ namespace Bookboon\JsonLDClient\Models;
 
 class ApiSource
 {
-    protected $pointer;
-    protected $parameter;
+    protected ?string $pointer = null;
+    protected ?string $parameter = null;
 
     /**
      * @return string|null

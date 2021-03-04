@@ -6,8 +6,8 @@ namespace Bookboon\JsonLDClient\Tests\Fixtures\Models;
 
 class NestedArrayClass
 {
-    protected $string;
-    protected $simpleClasses;
+    protected string $string = '';
+    protected array $simpleClasses = [];
 
     /**
      * @return string

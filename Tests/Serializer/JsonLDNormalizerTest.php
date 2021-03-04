@@ -88,8 +88,11 @@ class JsonLDNormalizerTest extends TestCase
 
         self::assertInstanceOf(NestedClass::class, $object);
         self::assertEquals("some random string", $object->getString());
-        self::assertInstanceOf(SimpleClass::class, $object->getSimpleClass());
-        self::assertEquals('some other string', $object->getSimpleClass()->getValue());
+
+        $simple = $object->getSimpleClass();
+        self::assertNotNull($simple);
+        self::assertInstanceOf(SimpleClass::class, $simple);
+        self::assertEquals('some other string', $simple->getValue());
     }
 
     public function testNestedWithoutDocDeserialize() : void
@@ -110,8 +113,11 @@ class JsonLDNormalizerTest extends TestCase
 
         self::assertInstanceOf(NestedClassWithoutDoc::class, $object);
         self::assertEquals("some random string", $object->getString());
-        self::assertInstanceOf(SimpleClass::class, $object->getSimpleClass());
-        self::assertEquals('some other string', $object->getSimpleClass()->getValue());
+
+        $simple = $object->getSimpleClass();
+        self::assertNotNull($simple);
+        self::assertInstanceOf(SimpleClass::class, $simple);
+        self::assertEquals('some other string', $simple->getValue());
     }
 
     public function testNestedArrayDeserialize() : void

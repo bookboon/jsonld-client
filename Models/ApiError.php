@@ -10,12 +10,12 @@ namespace Bookboon\JsonLDClient\Models;
  */
 class ApiError
 {
-    protected $id;
-    protected $status;
-    protected $code;
-    protected $title;
-    protected $detail;
-    protected $source;
+    protected ?string $id = null;
+    protected ?string $status = null;
+    protected ?string $code = null;
+    protected ?string $title = null;
+    protected ?string $detail = null;
+    protected ?ApiSource $source = null;
 
     /**
      * @return string|null

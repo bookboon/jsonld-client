@@ -6,10 +6,10 @@ use Bookboon\JsonLDClient\Client\JsonLDException;
 
 class MappingCollection
 {
-    protected $defaultNamespace;
+    protected string  $defaultNamespace;
 
-    /** @var MappingEndpoint[] */
-    protected $mappings;
+    /** @var array<MappingEndpoint> */
+    protected array $mappings;
 
     public function __construct(array $mappings, string $defaultNamespace = 'App\\Entity')
     {

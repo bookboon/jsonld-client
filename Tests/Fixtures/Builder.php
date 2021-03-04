@@ -7,8 +7,8 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class Builder
 {
-    private $container;
-    private $extention;
+    private ContainerBuilder $container;
+    private JsonLDClientExtension $extention;
 
     public function __construct()
     {
@@ -34,7 +34,7 @@ class Builder
     /**
      * @return JsonLDClientExtension
      */
-    protected function getExtension()
+    protected function getExtension() : JsonLDClientExtension
     {
         return new JsonLDClientExtension();
     }
@@ -42,7 +42,7 @@ class Builder
     /**
      * @return ContainerBuilder
      */
-    protected function getContainer()
+    protected function getContainer() : ContainerBuilder
     {
         return new ContainerBuilder();
     }

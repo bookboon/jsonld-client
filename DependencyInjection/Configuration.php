@@ -2,7 +2,6 @@
 
 namespace Bookboon\JsonLDClient\DependencyInjection;
 
-use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -17,8 +16,7 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder('jsonldclient');
 
-        /** @var ArrayNodeDefinition $root */
-        $root = $treeBuilder
+        $treeBuilder
             ->getRootNode()
             ->children()
             ->scalarNode('default_class_namespace')->isRequired()->end()

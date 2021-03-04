@@ -6,8 +6,8 @@ namespace Bookboon\JsonLDClient\Tests\Fixtures\Models;
 
 class NestedClassWithoutDoc
 {
-    protected $string;
-    protected $simpleClass;
+    protected string $string = '';
+    protected ?SimpleClass $simpleClass = null;
 
     public function getString() : string
     {

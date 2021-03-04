@@ -13,9 +13,9 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwareNormalizerInterface
 {
-    private $collection;
-    private $normalizer;
-    private $circularReferenceHandler;
+    private MappingCollection $collection;
+    private ObjectNormalizer $normalizer;
+    private JsonLDCircularReferenceHandler $circularReferenceHandler;
 
     public function __construct(
         ObjectNormalizer $normalizer,
@@ -26,24 +26,24 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
         $this->circularReferenceHandler = new JsonLDCircularReferenceHandler();
     }
 
-    public function normalize($data, $format = null, array $context = [])
+    public function normalize($object, $format = null, array $context = [])
     {
         $context[ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER] =
             $context[ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER] ??
             $this->circularReferenceHandler;
 
         /* Check if we're dealing with multiple objects */
-        if (is_array($data)) {
+        if (is_array($object)) {
             $returnArray = [];
 
-            foreach ($data as $item) {
+            foreach ($object as $item) {
                 $returnArray[] = $this->normalizeItem($item, $format, $context);
             }
 
             return $returnArray;
         }
 
-        return $this->normalizeItem($data, $format, $context);
+        return $this->normalizeItem($object, $format, $context);
     }
 
     public function supportsNormalization($data, $format = null, array $context = [])
@@ -63,14 +63,14 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
             in_array($type, [ApiErrorResponse::class, ApiError::class. '[]'], true);
     }
 
-    public function denormalize($data, $class, $format = null, array $context = [])
+    public function denormalize($data, $type, $format = null, array $context = [])
     {
         /* Check if we're dealing with multiple objects */
         if ($this->isDataArray($data)) {
             $returnArray = [];
 
             foreach ($data as $item) {
-                if ($class === ApiError::class . '[]') {
+                if ($type === ApiError::class . '[]') {
                     $item['@type'] = 'ApiError';
                 }
 
@@ -80,13 +80,21 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
             return $returnArray;
         }
 
-        if ($class === ApiErrorResponse::class) {
+        if ($type === ApiErrorResponse::class) {
             $data['@type'] = 'ApiErrorResponse';
         }
 
         return $this->denormalizeItem($data, $format, $context);
     }
 
+    /**
+     * @param mixed $data
+     * @param mixed $format
+     * @param array $context
+     * @return bool|float|int|mixed|object|string
+     * @throws JsonLDSerializationException
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
     protected function denormalizeItem($data, $format, array $context)
     {
         if (is_scalar($data)) {
@@ -103,15 +111,31 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
         return $this->normalizer->denormalize($data, $class, $format, $context);
     }
 
+    /**
+     * @param mixed $data
+     * @param mixed $format
+     * @param array $context
+     * @return array|bool|float|int|string
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
     protected function normalizeItem($data, $format, array $context)
     {
         if (is_scalar($data)) {
             return $data;
         }
 
+        $shortClassFn = function (string $className) {
+            if (false !== $pos = strrpos($className, '\\')) {
+                return substr($className, $pos + 1);
+            }
+            return $className;
+        };
+
+        $result = $this->normalizer->normalize($data, $format, $context);
+
         return array_merge(
-            ['@type' => substr(get_class($data), strrpos(get_class($data), '\\') + 1)],
-            $this->normalizer->normalize($data, $format, $context)
+            ['@type' => $shortClassFn(get_class($data))],
+            is_array($result) ? $result : [$result]
         );
     }
 

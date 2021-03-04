@@ -13,9 +13,10 @@ class JsonLDCircularReferenceHandler
         }
 
         $id = $object->getId();
+        /** @var string|false $shortClass */
         $shortClass = get_class($object);
 
-        if (false == $shortClass) {
+        if (false === $shortClass) {
             throw new JsonLDException('Cannot get classname');
         }
 

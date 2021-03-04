@@ -17,14 +17,23 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use League\OAuth2\Client\Token\AccessToken;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\CacheInterface;
 
 class JsonLdClientTest extends TestCase
 {
-    /** @var MockHandler */
-    protected $mockHandler;
+    protected MockHandler $mockHandler;
+
+    public function setUp() : void
+    {
+        $this->mockHandler = new MockHandler(
+            [
+                new Response(200, [], '')
+            ]
+        );
+    }
 
     /*
      * Plain Client
@@ -45,6 +54,7 @@ class JsonLdClientTest extends TestCase
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 1', $entity->getValue());
 
+        self::assertNotNull($this->mockHandler->getLastRequest());
         self::assertEquals('/simple/testuuid', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
@@ -118,8 +128,9 @@ class JsonLdClientTest extends TestCase
         $entities = $client->getMany(SimpleClass::class, []);
 
         self::assertCount(2, $entities);
-        self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
 
+        self::assertNotNull($this->mockHandler->getLastRequest());
+        self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
     public function testPersist_Success() : void
@@ -139,6 +150,8 @@ class JsonLdClientTest extends TestCase
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 2', $entity->getValue());
+
+        self::assertNotNull($this->mockHandler->getLastRequest());
         self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
@@ -159,6 +172,8 @@ class JsonLdClientTest extends TestCase
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 3', $entity->getValue());
+
+        self::assertNotNull($this->mockHandler->getLastRequest());
         self::assertEquals("PUT", $this->mockHandler->getLastRequest()->getMethod());
         self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
@@ -180,6 +195,8 @@ class JsonLdClientTest extends TestCase
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 3', $entity->getValue());
+
+        self::assertNotNull($this->mockHandler->getLastRequest());
         self::assertEquals("POST", $this->mockHandler->getLastRequest()->getMethod());
         self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
@@ -192,6 +209,7 @@ class JsonLdClientTest extends TestCase
         $client = $this->getClient("{}");
         $client->delete($testObject, []);
 
+        self::assertNotNull($this->mockHandler->getLastRequest());
         self::assertEquals('DELETE', $this->mockHandler->getLastRequest()->getMethod());
         self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
@@ -212,6 +230,7 @@ class JsonLdClientTest extends TestCase
         }
         JSON;
 
+        /** @var Stub&CacheInterface $cacheStub */
         $cacheStub = $this->createStub(CacheInterface::class);
         $cacheStub->method('get')
             ->willReturn($testJson);
@@ -237,6 +256,7 @@ class JsonLdClientTest extends TestCase
         }
         JSON;
 
+        /** @var MockObject&CacheInterface $cacheStub */
         $cacheStub = $this->createStub(CacheInterface::class);
         $cacheStub->method('get')
             ->willReturn(null);
@@ -251,6 +271,7 @@ class JsonLdClientTest extends TestCase
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 1', $entity->getValue());
 
+        self::assertNotNull($this->mockHandler->getLastRequest());
         self::assertEquals('/simple/testuuid', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
@@ -263,6 +284,7 @@ class JsonLdClientTest extends TestCase
         }
         JSON;
 
+        /** @var MockObject&CacheInterface $cacheStub */
         $cacheStub = $this->createStub(CacheInterface::class);
         $cacheStub->expects(self::once())
             ->method('delete');
@@ -275,6 +297,8 @@ class JsonLdClientTest extends TestCase
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 2', $entity->getValue());
+
+        self::assertNotNull($this->mockHandler->getLastRequest());
         self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
@@ -283,6 +307,7 @@ class JsonLdClientTest extends TestCase
         $testObject = new SimpleClass();
         $testObject->setValue("test value 2");
 
+        /** @var MockObject&CacheInterface $cacheStub */
         $cacheStub = $this->createStub(CacheInterface::class);
         $cacheStub->expects(self::once())
             ->method('delete');
@@ -290,6 +315,7 @@ class JsonLdClientTest extends TestCase
         $client = $this->getClient("{}", $cacheStub);
         $client->delete($testObject, []);
 
+        self::assertNotNull($this->mockHandler->getLastRequest());
         self::assertEquals('DELETE', $this->mockHandler->getLastRequest()->getMethod());
         self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
     }

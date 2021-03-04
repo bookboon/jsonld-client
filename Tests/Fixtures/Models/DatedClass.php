@@ -6,7 +6,7 @@ use DateTime;
 
 class DatedClass
 {
-    protected $created;
+    protected ?DateTime $created = null;
 
     /**
      * @return DateTime|null

@@ -7,7 +7,7 @@ use Throwable;
 
 class JsonLDResponseException extends JsonLDException
 {
-    protected $response;
+    protected ?ApiErrorResponse $response;
 
     /**
      * JsonLDResponseException constructor.

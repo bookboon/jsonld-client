@@ -4,7 +4,7 @@ namespace Bookboon\JsonLDClient\Models;
 
 class ApiErrorResponse
 {
-    protected $errors = [];
+    protected array $errors = [];
 
     /**
      * @return ApiError[]
