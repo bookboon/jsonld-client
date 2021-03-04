@@ -126,11 +126,11 @@ class JsonLDClient
      */
     public function getMany(string $className, array $params): ApiIterable
     {
-        $map = $this->_mappings->findEndpointByClass($className);
+        $url = $this->_mappings->findEndpointByClass($className)->getUrl($params);
 
         /** @var ApiIterable<T> $iter */
         $iter = new ApiIterable(
-            fn(array $params2) => $this->makeRequest($map->getUrl($params), 'GET', $params2),
+            fn(array $params2) => $this->makeRequest($url, 'GET', $params2),
             fn(string $data) => $this->deserialize($data),
             $params
         );
