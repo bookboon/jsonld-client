@@ -82,7 +82,11 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
 
         if ($jsonContents !== '[]' && $jsonContents !== "[]\n") {
             $this->results[$offset] = $deserialize($jsonContents);
+            return;
         }
+
+        // Prevent forever loop
+        $this->results[$offset] = [];
     }
 
     /**
@@ -189,7 +193,8 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     /**
      * {@inheritDoc}
      *
-     * Returns count of already fetched items, not all remote
+     * Returns count of already fetched items or if set the estimated total
+     * count based on the 'last' element of the link header
      *
      * @return int
      */

@@ -49,13 +49,13 @@ class JsonLdClientTest extends TestCase
         JSON;
 
         $client = $this->getClient($testJson);
-        $entity = $client->getById('testuuid', SimpleClass::class);
+        $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 1', $entity->getValue());
 
         self::assertNotNull($this->mockHandler->getLastRequest());
-        self::assertEquals('/simple/testuuid', $this->mockHandler->getLastRequest()->getUri()->getPath());
+        self::assertEquals('/simple/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
     public function testGetById_SerializationError() : void
@@ -69,7 +69,7 @@ class JsonLdClientTest extends TestCase
         JSON;
 
         $client = $this->getClient($testJson);
-        $client->getById('test', SimpleClass::class);
+        $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
     }
 
     public function testGetById_ResponseCommunicationError() : void
@@ -79,7 +79,7 @@ class JsonLdClientTest extends TestCase
         $client = $this->getClient("");
         $this->mockHandler->reset();
         $this->mockHandler->append(new RequestException('Error Communicating with Server', new Request('GET', 'test')));
-        $client->getById('test', SimpleClass::class);
+        $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
     }
 
     public function testGetById_ResponseNotFoundError() : void
@@ -89,7 +89,7 @@ class JsonLdClientTest extends TestCase
         $client = $this->getClient("");
         $this->mockHandler->reset();
         $this->mockHandler->append(new Response(404, [], '{"errors":[{"status": "404", "title": "Bad Request"}]}'));
-        $client->getById('test', SimpleClass::class);
+        $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
     }
 
     public function testGetById_ResponseBadRequestError() : void
@@ -106,7 +106,7 @@ class JsonLdClientTest extends TestCase
                 new Response(400, [], '{"errors":[{"status": "400", "title": "Bad Request"}]}')
             )
         );
-        $client->getById('test', SimpleClass::class);
+        $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
     }
 
     public function testGetMany_Success() : void
@@ -236,7 +236,7 @@ class JsonLdClientTest extends TestCase
             ->willReturn($testJson);
 
         $client = $this->getClient($testJson, $cacheStub);
-        $entity = $client->getById('testuuid', SimpleClass::class, [], true);
+        $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, [], true);
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 1', $entity->getValue());
@@ -263,16 +263,16 @@ class JsonLdClientTest extends TestCase
 
         $cacheStub->expects(self::once())
             ->method('set')
-            ->with(self::equalTo('jsonld_testuuid'), self::equalTo($testJson));
+            ->with(self::equalTo('jsonld_bce73a1e-bc1f-43f5-b8dc-f05147f18978'), self::equalTo($testJson));
 
         $client = $this->getClient($testJson, $cacheStub);
-        $entity = $client->getById('testuuid', SimpleClass::class, [], true);
+        $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, [], true);
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 1', $entity->getValue());
 
         self::assertNotNull($this->mockHandler->getLastRequest());
-        self::assertEquals('/simple/testuuid', $this->mockHandler->getLastRequest()->getUri()->getPath());
+        self::assertEquals('/simple/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
     public function testPersist_Cache_Success() : void
