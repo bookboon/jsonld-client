@@ -102,6 +102,40 @@ class ApiIterableTest extends TestCase
         self::assertEquals(3, $calledCount);
     }
 
+    public function testHasResultsExactly30() : void
+    {
+        $calledCount = 0;
+        $link = '<http://test.com/entity?offset=0&limit=100>; rel="first",<http://test.com/entity?offset=1800&limit=100>; rel="last",<http://test.com/entity?offset=100&limit=100>; rel="next"';
+
+        $array = new ApiIterable(
+            function (array $params) use (&$calledCount, $link) {
+                $calledCount += 1;
+                self::assertEquals(10, $params[ApiIterable::LIMIT]);
+
+                return new Response(
+                    200,
+                    [ApiIterable::LINK_HEADER => [$link]],
+                    $calledCount > 3 ? '[]' : '[{"not_used":"in_this_test"}]'
+                );
+            },
+            function (string $data) use (&$calledCount) {
+                if ($calledCount < 4) {
+                    return $this->generateLetters('a', 'j');
+                }
+                return [];
+            },
+            []
+        );
+
+        $items = [];
+        foreach ($array as $item) {
+            $items[] = $item;
+        }
+
+        self::assertCount(30, $items);
+        self::assertEquals(4, $calledCount);
+    }
+
     public function testGetSpecificOffset() : void
     {
         $calledCount = 0;
