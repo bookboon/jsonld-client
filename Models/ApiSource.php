@@ -16,6 +16,15 @@ class ApiSource
     }
 
     /**
+     * @param string|null $pointer
+     * @return void
+     */
+    public function setPointer(?string $pointer) : void
+    {
+        $this->pointer = $pointer;
+    }
+
+    /**
      * @return string|null
      */
     public function getParameter() : ?string
@@ -23,5 +32,12 @@ class ApiSource
         return $this->parameter;
     }
 
-
+    /**
+     * @param string|null $parameter
+     * @return void
+     */
+    public function setParameter(?string $parameter) : void
+    {
+        $this->parameter = $parameter;
+    }
 }
