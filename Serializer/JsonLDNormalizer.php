@@ -6,6 +6,7 @@ use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Models\ApiError;
 use Bookboon\JsonLDClient\Models\ApiErrorResponse;
+use Bookboon\JsonLDClient\Models\ApiSource;
 use DateTime;
 use Symfony\Component\Serializer\Normalizer\ContextAwareDenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ContextAwareNormalizerInterface;
@@ -72,6 +73,9 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
             foreach ($data as $item) {
                 if ($type === ApiError::class . '[]') {
                     $item['@type'] = 'ApiError';
+                }
+                if (isset($item['source'])) {
+                    $item['source']['@type'] = 'ApiSource';
                 }
 
                 $returnArray[] = $this->denormalizeItem($item, $format, $context);

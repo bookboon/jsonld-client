@@ -109,6 +109,23 @@ class JsonLdClientTest extends TestCase
         $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
     }
 
+    public function testGetById_ResponseBadRequestError2() : void
+    {
+        $this->expectException(JsonLDResponseException::class);
+        $this->expectExceptionMessage("400: Bad request");
+
+        $client = $this->getClient("");
+        $this->mockHandler->reset();
+        $this->mockHandler->append(
+            new RequestException(
+                'Error Communicating with Server',
+                new Request('GET', 'test'),
+                new Response(400, [], '{"errors":[{"status":"400","title":"Bad request","detail":"Validation failed for field with tag: gte","source":{"pointer":"/shortDescription"}}]}')
+            )
+        );
+        $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
+    }
+
     public function testGetMany_Success() : void
     {
         $testJson = <<<JSON

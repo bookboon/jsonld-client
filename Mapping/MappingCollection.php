@@ -77,7 +77,7 @@ class MappingCollection
      */
     public function findClassByShortNameOrDefault(string $shortClass) : string
     {
-        if (in_array($shortClass, ['ApiError', 'ApiErrorResponse'], true)) {
+        if (in_array($shortClass, ['ApiError', 'ApiSource', 'ApiErrorResponse'], true)) {
             return "Bookboon\JsonLDClient\Models\\$shortClass";
         }
 
