@@ -2,6 +2,7 @@
 
 namespace Bookboon\JsonLDClient\Client;
 
+use Bookboon\JsonLDClient\Models\ApiError;
 use Bookboon\JsonLDClient\Models\ApiErrorResponse;
 use Throwable;
 
@@ -29,5 +30,13 @@ class JsonLDResponseException extends JsonLDException
         }
 
         parent::__construct($message, $statusCode, $previous);
+    }
+
+    /**
+     * @return array<ApiError>
+     */
+    public function getErrors() : array
+    {
+        return $this->response ? $this->response->getErrors() : [];
     }
 }
