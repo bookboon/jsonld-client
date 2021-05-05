@@ -31,7 +31,10 @@ class GuzzleClientFactory
 
         if ($request !== null) {
             foreach ($request->headers as $key => $value) {
-                if (stripos($key, 'x-b3-') !== false || stripos($key, 'x-request-id') !== false) {
+                if (stripos($key, 'x-b3-') !== false
+                    || stripos($key, 'x-request-id') !== false
+                    || stripos($key, 'sentry-trace') !== false
+                ) {
                     $headers[$key] = implode('', $value);
                 }
             }
