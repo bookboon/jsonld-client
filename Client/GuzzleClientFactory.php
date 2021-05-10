@@ -4,13 +4,14 @@ namespace Bookboon\JsonLDClient\Client;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\HandlerStack;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 class GuzzleClientFactory
 {
-    const USER_AGENT = 'JsonLDClient/0.3';
+    const USER_AGENT = 'JsonLDClient/1.2';
 
-    public static function create(RequestStack $requestFactory) : ClientInterface
+    public static function create(RequestStack $requestFactory, HandlerStack $stack) : ClientInterface
     {
         return new Client(
             [
@@ -19,7 +20,8 @@ class GuzzleClientFactory
                     [
                     'User-Agent' => self::USER_AGENT
                     ]
-                )
+                ),
+                'handler' => $stack
             ]
         );
     }
@@ -33,7 +35,6 @@ class GuzzleClientFactory
             foreach ($request->headers as $key => $value) {
                 if (stripos($key, 'x-b3-') !== false
                     || stripos($key, 'x-request-id') !== false
-                    || stripos($key, 'sentry-trace') !== false
                 ) {
                     $headers[$key] = implode('', $value);
                 }
