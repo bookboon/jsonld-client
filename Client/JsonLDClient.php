@@ -317,7 +317,7 @@ class JsonLDClient
             throw new JsonLDException('Cannot persist object without getId method');
         }
 
-        if ($checkId && strlen($object->getId()) !== 36) {
+        if ($checkId && strlen($object->getId()) === 0) {
             throw new JsonLDException('Invalid object id');
         }
     }
