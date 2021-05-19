@@ -158,10 +158,6 @@ class JsonLDClient
     {
         $map = $this->_mappings->findEndpointByClass($className);
 
-        if (strlen($id) !== 36) {
-            throw new JsonLDException('Invalid object id');
-        }
-
         $url = sprintf('%s/%s', $map->getUrl($params), $id);
         $jsonContents = null;
         $cacheKey = $this->cacheKey($id);
