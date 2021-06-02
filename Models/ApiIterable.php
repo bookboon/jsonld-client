@@ -207,7 +207,14 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
         $count = 0;
 
         if ($this->link !== null) {
-            $count = $this->link->offset(LinkParser::LAST) ?? 0;
+            $last = $this->link->offset(LinkParser::LAST);
+            if ($last !== null) {
+                // The last page will be hidden unless we add the offset to count. For 21 results the last page will be
+                // ?limit=10&offset=20, which would make $last = 20. In the case we've loaded the entire collection,
+                // return the accurate count of the last page.
+                $lastPageCount = isset($this->results[$last]) ? count($this->results[$last]) : $this->requestLimit;
+                $count = $last + $lastPageCount;
+            }
         }
 
         if ($count === 0) {
