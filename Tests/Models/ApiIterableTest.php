@@ -191,7 +191,7 @@ class ApiIterableTest extends TestCase
     public function testGetCountFromRemoteCollection() : void
     {
         $calledCount = 0;
-        $link = '<http://test.com/entity?offset=0&limit=100>; rel="first",<http://test.com/entity?offset=1800&limit=100>; rel="last",<http://test.com/entity?offset=100&limit=100>; rel="next"';
+        $link = '<http://test.com/entity?offset=0&limit=10>; rel="first",<http://test.com/entity?offset=50&limit=10>; rel="last",<http://test.com/entity?offset=10&limit=10>; rel="next"';
 
         $array = new ApiIterable(
             function (array $params) use (&$calledCount, $link) {
@@ -201,7 +201,35 @@ class ApiIterableTest extends TestCase
                 return new Response(200, [ApiIterable::LINK_HEADER => [$link]]);
             },
             function (string $data) {
-                return $this->generateLetters('k', 'm');
+                return $this->generateLetters('a', 'j');
+            },
+            []
+        );
+
+        $test = $array[5];
+
+        self::assertCount(60, $array);
+        self::assertEquals(1, $calledCount);
+    }
+
+    public function testGetExactCountFromRemoteCollection() : void
+    {
+        $calledCount = 0;
+        $link = '<http://test.com/entity?offset=0&limit=10>; rel="first",<http://test.com/entity?offset=50&limit=10>; rel="last",<http://test.com/entity?offset=10&limit=10>; rel="next"';
+
+        $array = new ApiIterable(
+            function (array $params) use (&$calledCount, $link) {
+                self::assertEquals(10, $params[ApiIterable::LIMIT]);
+                self::assertEquals($calledCount * 10, $params[ApiIterable::OFFSET]);
+                $calledCount += 1;
+                return new Response(200, [ApiIterable::LINK_HEADER => [$link]]);
+            },
+            function (string $data) use (&$calledCount) {
+                if ($calledCount <= 5) {
+                    return $this->generateLetters('a', 'j');
+                }
+
+                return $this->generateLetters('k', 'n');
             },
             []
         );
@@ -211,8 +239,8 @@ class ApiIterableTest extends TestCase
             $items[] = $item;
         }
 
-        self::assertCount(1800, $array);
-        self::assertEquals(1, $calledCount);
+        self::assertCount(54, $array);
+        self::assertEquals(6, $calledCount);
     }
 
     private function generateLetters(string $start, string $end) : array
