@@ -137,6 +137,10 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
 
         $result = $this->normalizer->normalize($data, $format, $context);
 
+        if ($data instanceof \stdClass) {
+            return is_array($result) ? $result : [$result];
+        }
+
         return array_merge(
             ['@type' => $shortClassFn(get_class($data))],
             is_array($result) ? $result : [$result]

@@ -9,6 +9,7 @@ use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularChild;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParent;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParentWithId;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DatedClass;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\DynamicArrayClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedArrayClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedClassWithoutDoc;
@@ -202,6 +203,30 @@ class JsonLDNormalizerTest extends TestCase
         $testJson = $serializer->serialize($objects, JsonLDEncoder::FORMAT);
 
         self::assertEquals($testJson, $expectJson);
+    }
+
+    public function testDataArraySerializer() : void
+    {
+        $serializer = SerializerHelper::create([]);
+        $expectJson = '{"@type":"DynamicArrayClass","array":{"MapArray":[{"label":"english","iso":"en"},{"label":"deutsche","iso":"de"}]},"id":"3e147484-01fd-4176-b8f4-43ef623fb092"}';
+
+        $dynamicArrayObj = new DynamicArrayClass;
+        $dynamicArrayObj->setArray([
+            'MapArray' => (object)[
+                [
+                    'label' => 'english',
+                    'iso' => 'en'
+                ],
+                [
+                    'label' => 'deutsche',
+                    'iso' => 'de'
+                ]
+            ]
+        ]);
+
+        $testJson = $serializer->serialize($dynamicArrayObj, JsonLDEncoder::FORMAT);
+
+        self::assertEquals($expectJson, $testJson);
     }
 
     public function testNestedNormalizeNoTypeException() : void
