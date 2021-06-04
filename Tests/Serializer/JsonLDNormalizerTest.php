@@ -208,30 +208,25 @@ class JsonLDNormalizerTest extends TestCase
     public function testDataArraySerializer() : void
     {
         $serializer = SerializerHelper::create([]);
-        $expectJson = '{"@type":"Example","ExampleKey":{"MapArray":[[{"label":"english","iso":"en","@type":"MapArrayElement"},{"label":"deutsche","iso":"de","@type":"MapArrayElement"}]]},"id":"3e147484-01fd-4176-b8f4-43ef623fb092"}';
+        $expectJson = '{"@type":"DynamicArrayClass","array":{"MapArray":[{"label":"english","iso":"en"},{"label":"deutsche","iso":"de"}]},"id":"3e147484-01fd-4176-b8f4-43ef623fb092"}';
 
         $dynamicArrayObj = new DynamicArrayClass;
         $dynamicArrayObj->setArray([
-            "@type" => 'Example',
-            'ExampleKey' => [
-                'MapArray' => [
-                    [
-                        'label' => 'english',
-                        'iso' => 'en',
-                        '@type' => 'MapArrayElement'
-                    ],
-                    [
-                        'label' => 'deutsche',
-                        'iso' => 'de',
-                        '@type' => 'MapArrayElement'
-                    ]
+            'MapArray' => (object)[
+                [
+                    'label' => 'english',
+                    'iso' => 'en'
+                ],
+                [
+                    'label' => 'deutsche',
+                    'iso' => 'de'
                 ]
             ]
         ]);
 
         $testJson = $serializer->serialize($dynamicArrayObj, JsonLDEncoder::FORMAT);
 
-        self::assertEquals($testJson, $expectJson);
+        self::assertEquals($expectJson, $testJson);
     }
 
     public function testNestedNormalizeNoTypeException() : void
