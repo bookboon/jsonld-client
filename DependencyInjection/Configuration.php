@@ -28,7 +28,8 @@ class Configuration implements ConfigurationInterface
                         foreach ($v as $type => $uri) {
                             $outArray[] = isset($uri['uri']) ? $uri : [
                                 'type' => $type,
-                                'uri' => $uri
+                                'uri' => $uri,
+                                'renamed_properties' => [],
                             ];
                         }
                         return $outArray;
@@ -40,6 +41,11 @@ class Configuration implements ConfigurationInterface
                     ->children()
                         ->scalarNode('type')->end()
                         ->scalarNode('uri')->end()
+                        ->arrayNode('renamed_properties')
+                            ->useAttributeAsKey('name')
+                            ->scalarPrototype()->end()
+                            ->defaultValue([])
+                            ->end()
                     ->end()
                 ->end()
             ->end()

@@ -4,6 +4,7 @@ namespace Bookboon\JsonLDClient\Tests\Serializer;
 
 use Bookboon\JsonLDClient\Client\JsonLDException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
+use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularChild;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParent;
@@ -37,7 +38,28 @@ class JsonLDNormalizerTest extends TestCase
         self::assertEquals("some random string", $object->getValue());
     }
 
-    public function testDatedDeserialize_HasDate() : void
+    public function testDeserializeWithMapping(): void
+    {
+        $serializer = SerializerHelper::create([
+            new MappingEndpoint('Bookboon\JsonLDClient\Tests\Fixtures\Models\SimpleClass', '', [
+                'value' => '@MangledValue'
+            ])
+        ]);
+
+        $testJson = <<<JSON
+        {
+            "@type": "SimpleClass",
+            "@MangledValue": "some random string"
+        }
+        JSON;
+
+        $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+
+        self::assertInstanceOf(SimpleClass::class, $object);
+        self::assertEquals("some random string", $object->getValue());
+    }
+
+    public function testDatedDeserialize_HasDate(): void
     {
         $serializer = SerializerHelper::create([]);
         $date = DateTime::createFromFormat(DateTime::RFC3339_EXTENDED, "2014-01-01T23:28:56.782Z");
@@ -199,6 +221,23 @@ class JsonLDNormalizerTest extends TestCase
     {
         $serializer = SerializerHelper::create([]);
         $expectJson = '{"@type":"SimpleClass","value":"some other string","id":"232d2c41-278a-4377-bd9d-c6046494ceaf"}';
+        $testObject = new SimpleClass();
+        $testObject->setValue('some other string');
+
+        $testJson = $serializer->serialize($testObject,JsonLDEncoder::FORMAT);
+
+        self::assertEquals($expectJson, $testJson);
+    }
+
+    public function testSerializeWithMapping(): void
+    {
+        $serializer = SerializerHelper::create([
+            new MappingEndpoint('Bookboon\JsonLDClient\Tests\Fixtures\Models\SimpleClass', '', [
+                'value' => '@MangledValue'
+            ])
+        ]);
+
+        $expectJson = '{"@type":"SimpleClass","id":"232d2c41-278a-4377-bd9d-c6046494ceaf","@MangledValue":"some other string"}';
         $testObject = new SimpleClass();
         $testObject->setValue('some other string');
 

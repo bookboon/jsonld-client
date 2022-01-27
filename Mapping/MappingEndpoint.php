@@ -8,8 +8,10 @@ class MappingEndpoint
 {
     protected string $type;
     protected string $uri;
+    protected array $propertyMap;
+    protected array $reversePropertyMap;
 
-    public function __construct(string $type, string $uri)
+    public function __construct(string $type, string $uri, array $propertyMap = [])
     {
         if (strpos($type, "\\") === false) {
             throw new MappingException('Must use full className');
@@ -17,6 +19,8 @@ class MappingEndpoint
 
         $this->type = $type;
         $this->uri = $uri;
+        $this->propertyMap = $propertyMap;
+        $this->reversePropertyMap = array_flip($propertyMap);
     }
 
     /**
@@ -79,6 +83,28 @@ class MappingEndpoint
         }
 
         return $url;
+    }
+
+    public function normaliseData(array $data): array
+    {
+        return self::applyMapping($data, $this->propertyMap);
+    }
+
+    public function denormaliseData(array $data): array
+    {
+        return self::applyMapping($data, $this->reversePropertyMap);
+    }
+
+    protected static function applyMapping(array $data, array $mapping): array
+    {
+        foreach ($mapping as $srcKey => $dstKey) {
+            if (isset($data[$srcKey])) {
+                $data[$dstKey] = $data[$srcKey];
+                unset($data[$srcKey]);
+            }
+        }
+
+        return $data;
     }
 
     protected function endsWith(string $haystack, string $needle): bool

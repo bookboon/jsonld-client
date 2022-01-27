@@ -68,4 +68,83 @@ class MappingEndpointTest extends TestCase
         $endpoint = new MappingEndpoint("App\\Entity\\ApiSend", 'http://test/{id}/apisend');
         self::assertEquals('http://test/testuuid/apisend', $endpoint->getUrl([]));
     }
+
+    public function testNormaliseData_NoMapping(): void
+    {
+        $endpoint = new MappingEndpoint("App\\Entity\\ApiSend", 'http://test/{id}/apisend');
+        $data = [
+            "@id" => "id123",
+            "_id" => "id456",
+            "attributes" => ["a", "b", "c"],
+            "other" => 616
+        ];
+
+        $res = $endpoint->normaliseData($data);
+        self::assertEquals($data, $res);
+    }
+
+    public function testNormaliseData_WithMapping(): void
+    {
+        $endpoint = new MappingEndpoint("App\\Entity\\ApiSend", 'http://test/{id}/apisend', [
+            'id' => '@id',
+            'other' => 'someThing',
+            'attributes' => 'stuff',
+        ]);
+        $data = [
+            "id" => "id123",
+            "_id" => "id456",
+            "attributes" => ["a", "b", "c"],
+            "other" => 616
+        ];
+        $expected = [
+            "@id" => "id123",
+            "_id" => "id456",
+            "stuff" => ["a", "b", "c"],
+            "someThing" => 616
+        ];
+
+        $res = $endpoint->normaliseData($data);
+        self::assertEquals($expected, $res);
+    }
+
+    public function testDenormaliseData_NoMapping(): void
+    {
+        $endpoint = new MappingEndpoint("App\\Entity\\ApiSend", 'http://test/{id}/apisend');
+        $data = [
+            "@id" => "id123",
+            "_id" => "id456",
+            "attributes" => ["a", "b", "c"],
+            "other" => 616
+        ];
+
+        $res = $endpoint->denormaliseData($data);
+        self::assertEquals($data, $res);
+    }
+
+    public function testDenormaliseData_WithMapping(): void
+    {
+        $endpoint = new MappingEndpoint("App\\Entity\\ApiSend", 'http://test/{id}/apisend', [
+            'id' => '@id',
+            '_id' => 'objectId',
+            'other' => 'someThing',
+            'attributes' => 'stuff',
+        ]);
+        $data = [
+            "@id" => "id123",
+            "objectId" => "id456",
+            "stuff" => ["a", "b", "c"],
+            "someThing" => 616,
+            "t" => "s",
+        ];
+        $expected = [
+            "id" => "id123",
+            "_id" => "id456",
+            "attributes" => ["a", "b", "c"],
+            "other" => 616,
+            "t" => "s",
+        ];
+
+        $res = $endpoint->denormaliseData($data);
+        self::assertEquals($expected, $res);
+    }
 }
