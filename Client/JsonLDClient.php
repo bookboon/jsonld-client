@@ -3,9 +3,11 @@
 namespace Bookboon\JsonLDClient\Client;
 
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
+use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Models\ApiErrorResponse;
 use Bookboon\JsonLDClient\Models\ApiIterable;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
+use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
 use Exception;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
@@ -130,12 +132,13 @@ class JsonLDClient
      */
     public function getMany(string $className, array $params): ApiIterable
     {
-        $url = $this->_mappings->findEndpointByClass($className)->getUrl($params);
+        $map = $this->_mappings->findEndpointByClass($className);
+        $url = $map->getUrl($params);
 
         /** @var ApiIterable<T> $iter */
         $iter = new ApiIterable(
             fn(array $params2) => $this->makeRequest($url, 'GET', $params2),
-            fn(string $data) => $this->deserialize($data),
+            fn(string $data) => $this->deserialize($data, $map),
             $params
         );
 
@@ -176,7 +179,7 @@ class JsonLDClient
         }
 
         /** @var T $object */
-        $object = $this->deserialize($jsonContents);
+        $object = $this->deserialize($jsonContents, $map);
 
         return $object;
     }
@@ -219,9 +222,12 @@ class JsonLDClient
             $this->_cache->delete($this->cacheKey($object->getId()));
         }
 
+        $map = $this->_mappings->findEndpointByClass(get_class($object));
+
         /** @var T $object */
         $object = $this->deserialize(
-            $response->getBody()->getContents()
+            $response->getBody()->getContents(),
+            $map
         );
 
         return $object;
@@ -287,6 +293,7 @@ class JsonLDClient
                     /** @var ApiErrorResponse $errorResponse */
                     $errorResponse = $this->deserialize(
                         $response->getBody()->getContents(),
+                        null,
                         ApiErrorResponse::class,
                         'json'
                     );
@@ -334,15 +341,25 @@ class JsonLDClient
 
     /**
      * @param string $jsonContents
+     * @param MappingEndpoint|null $map
      * @param string $type
      * @param string $format
      * @return array<object>|object
      * @throws JsonLDSerializationException
      */
-    protected function deserialize(string $jsonContents, string $type = '', string $format = JsonLDEncoder::FORMAT)
-    {
+    protected function deserialize(
+        string $jsonContents,
+        ?MappingEndpoint $map,
+        string $type = '',
+        string $format = JsonLDEncoder::FORMAT
+    ) {
+        $context = [];
+        if ($map !== null) {
+            $context[JsonLDNormalizer::MAPPPING_KEY] = $map;
+        }
+        
         try {
-            return $this->_serializer->deserialize($jsonContents, $type, $format);
+            return $this->_serializer->deserialize($jsonContents, $type, $format, $context);
         } catch (Exception $e) {
             throw new JsonLDSerializationException($e->getMessage(), 0, $e);
         }

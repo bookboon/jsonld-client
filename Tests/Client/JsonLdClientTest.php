@@ -10,6 +10,9 @@ use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\SimpleClass;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedArrayClass;
+use Bookboon\JsonLDClient\Tests\Fixtures\OtherModels\SimpleClass as OtherSimpleClass;
+use Bookboon\JsonLDClient\Tests\Fixtures\OtherModels\NestedArrayClass as OtherNestedArrayClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\SerializerHelper;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -56,6 +59,38 @@ class JsonLdClientTest extends TestCase
 
         self::assertNotNull($this->mockHandler->getLastRequest());
         self::assertEquals('/simple/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
+    }
+
+    public function testGetById_Nested_Success() : void
+    {
+        $testJson = <<<JSON
+        {
+            "@type": "NestedArrayClass",
+            "string": "some random string",
+            "simpleClasses": [
+                {
+                    "@type": "SimpleClass",
+                    "value": "some other string"
+                },
+                {
+                    "@type": "SimpleClass",
+                    "value": "different value"
+                }
+            ]
+        }
+        JSON;
+
+        $client = $this->getClient($testJson);
+        $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', NestedArrayClass::class);
+
+        self::assertInstanceOf(NestedArrayClass::class, $entity);
+        self::assertEquals('some random string', $entity->getString());
+        self::assertCount(2, $entity->getSimpleClasses());
+        self::assertEquals('some other string', $entity->getSimpleClasses()[0]->getValue());
+        self::assertEquals('different value', $entity->getSimpleClasses()[1]->getValue());
+
+        self::assertNotNull($this->mockHandler->getLastRequest());
+        self::assertEquals('/nestedarray/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
     public function testGetById_SerializationError() : void
@@ -337,6 +372,58 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
+
+    public function testGetById_Other_Success() : void
+    {
+        $testJson = <<<JSON
+        {
+            "@type": "SimpleClass",
+            "value": "test value 1"
+        }
+        JSON;
+
+        $client = $this->getClient($testJson);
+        $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', OtherSimpleClass::class);
+
+        self::assertInstanceOf(OtherSimpleClass::class, $entity);
+        self::assertEquals('test value 1', $entity->getValue());
+
+        self::assertNotNull($this->mockHandler->getLastRequest());
+        self::assertEquals('/simple/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
+    }
+
+    public function testGetById_Other_Nested_Success() : void
+    {
+        $testJson = <<<JSON
+        {
+            "@type": "NestedArrayClass",
+            "string": "some random string",
+            "simpleClasses": [
+                {
+                    "@type": "SimpleClass",
+                    "value": "some other string"
+                },
+                {
+                    "@type": "SimpleClass",
+                    "value": "different value"
+                }
+            ]
+        }
+        JSON;
+
+        $client = $this->getClient($testJson);
+        $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', OtherNestedArrayClass::class);
+
+        self::assertInstanceOf(OtherNestedArrayClass::class, $entity);
+        self::assertEquals('some random string', $entity->getString());
+        self::assertCount(2, $entity->getSimpleClasses());
+        self::assertEquals('some other string', $entity->getSimpleClasses()[0]->getValue());
+        self::assertEquals('different value', $entity->getSimpleClasses()[1]->getValue());
+
+        self::assertNotNull($this->mockHandler->getLastRequest());
+        self::assertEquals('/nestedarray/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
+    }
+
     protected function getClient(string $body, CacheInterface $cache = null) : JsonLDClient
     {
         $this->mockHandler = new MockHandler(
@@ -360,7 +447,10 @@ class JsonLdClientTest extends TestCase
             SerializerHelper::create([]),
             new MappingCollection(
                 [
-                new MappingEndpoint(SimpleClass::class, 'http://localhost/simple')
+                new MappingEndpoint(SimpleClass::class, 'http://localhost/simple'),
+                new MappingEndpoint(NestedArrayClass::class, 'http://localhost/nestedarray'),
+                new MappingEndpoint(OtherSimpleClass::class, 'http://otherhost/simple'),
+                new MappingEndpoint(OtherNestedArrayClass::class, 'http://otherhost/nestedarray')
                 ]
             ),
             $cache

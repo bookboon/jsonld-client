@@ -6,12 +6,10 @@ use Bookboon\JsonLDClient\Client\JsonLDException;
 
 class MappingCollection
 {
-    protected string  $defaultNamespace;
-
     /** @var array<MappingEndpoint> */
     protected array $mappings;
 
-    public function __construct(array $mappings, string $defaultNamespace = 'App\\Entity')
+    public function __construct(array $mappings)
     {
         foreach ($mappings as $map) {
             if (!($map instanceof MappingEndpoint)) {
@@ -19,11 +17,10 @@ class MappingCollection
             }
         }
 
-        $this->defaultNamespace = rtrim($defaultNamespace, '\\');
         $this->mappings = $mappings;
     }
 
-    public static function create(array $mappings, string $defaultNamespace = 'App\\Entity') : MappingCollection
+    public static function create(array $mappings) : MappingCollection
     {
         $endpoints = [];
 
@@ -36,13 +33,10 @@ class MappingCollection
                 throw new MappingException('Invalid uri');
             }
 
-            $endpoints[] = new MappingEndpoint(
-                strpos($map['type'], "\\") === false ? "$defaultNamespace\\{$map['type']}" : $map['type'],
-                $map['uri'],
-                $map['renamed_properties'] ?? [],
-            );
+            $endpoints[] = new MappingEndpoint($map['type'], $map['uri'], $map['renamed_properties'] ?? []);
         }
-        return new self($endpoints, $defaultNamespace);
+
+        return new self($endpoints);
     }
 
     /**
@@ -51,14 +45,6 @@ class MappingCollection
     public function get() : array
     {
         return $this->mappings;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDefaultNamespace(): string
-    {
-        return $this->defaultNamespace;
     }
 
     public function findEndpointByClass(string $className) : MappingEndpoint
@@ -76,7 +62,7 @@ class MappingCollection
      * @param string $shortClass
      * @return string
      */
-    public function findClassByShortNameOrDefault(string $shortClass) : string
+    public function findClassByShortNameOrDefault(string $shortClass, string $defaultNamespace) : string
     {
         if (in_array($shortClass, ['ApiError', 'ApiSource', 'ApiErrorResponse'], true)) {
             return "Bookboon\JsonLDClient\Models\\$shortClass";
@@ -88,6 +74,6 @@ class MappingCollection
             }
         }
 
-        return $this->getDefaultNamespace() . '\\' . $shortClass;
+        return $defaultNamespace . '\\' . $shortClass;
     }
 }

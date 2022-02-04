@@ -16,14 +16,13 @@ class Builder
         $this->extention = $this->getExtension();
     }
 
-    public function get(array $mapping, string $default_class_namespace) : ContainerBuilder
+    public function get(array $mapping) : ContainerBuilder
     {
 
         $this->extention->load(
             [
                 'jsonldclient' => [
-                    'mappings' => $mapping,
-                    'default_class_namespace' => $default_class_namespace
+                    'mappings' => $mapping
                 ]
             ],
             $this->container

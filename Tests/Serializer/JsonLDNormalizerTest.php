@@ -6,6 +6,7 @@ use Bookboon\JsonLDClient\Client\JsonLDException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
+use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularChild;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParent;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParentWithId;
@@ -32,7 +33,12 @@ class JsonLDNormalizerTest extends TestCase
         }
         JSON;
 
-        $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+        $object = $serializer->deserialize(
+            $testJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(SimpleClass::class)
+        );
 
         self::assertInstanceOf(SimpleClass::class, $object);
         self::assertEquals("some random string", $object->getValue());
@@ -71,7 +77,12 @@ class JsonLDNormalizerTest extends TestCase
         }
         JSON;
 
-        $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+        $object = $serializer->deserialize(
+            $testJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(DatedClass::class)
+        );
 
         self::assertInstanceOf(DatedClass::class, $object);
         self::assertEquals($date, $object->getCreated());
@@ -87,7 +98,12 @@ class JsonLDNormalizerTest extends TestCase
         }
         JSON;
 
-        $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+        $object = $serializer->deserialize(
+            $testJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(DatedClass::class)
+        );
 
         self::assertInstanceOf(DatedClass::class, $object);
         self::assertNull($object->getCreated());
@@ -107,8 +123,12 @@ class JsonLDNormalizerTest extends TestCase
         }
         JSON;
 
-        $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
-
+        $object = $serializer->deserialize(
+            $testJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(NestedClass::class)
+        );
         self::assertInstanceOf(NestedClass::class, $object);
         self::assertEquals("some random string", $object->getString());
 
@@ -132,7 +152,12 @@ class JsonLDNormalizerTest extends TestCase
         }
         JSON;
 
-        $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+        $object = $serializer->deserialize(
+            $testJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(NestedClassWithoutDoc::class)
+        );
 
         self::assertInstanceOf(NestedClassWithoutDoc::class, $object);
         self::assertEquals("some random string", $object->getString());
@@ -163,7 +188,12 @@ class JsonLDNormalizerTest extends TestCase
         }
         JSON;
 
-        $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+        $object = $serializer->deserialize(
+            $testJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(NestedArrayClass::class)
+        );
 
         self::assertInstanceOf(NestedArrayClass::class, $object);
         self::assertEquals("some random string", $object->getString());
@@ -185,8 +215,13 @@ class JsonLDNormalizerTest extends TestCase
         }
         JSON;
 
-        $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
-
+        $object = $serializer->deserialize(
+            $testJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(NestedArrayClass::class)
+        );
+        
         self::assertInstanceOf(NestedArrayClass::class, $object);
         self::assertEquals("some random string", $object->getString());
         self::assertIsArray($object->getSimpleClasses());
@@ -209,7 +244,12 @@ class JsonLDNormalizerTest extends TestCase
         ]
         JSON;
 
-        $objects = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+        $objects = $serializer->deserialize(
+            $testJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(SimpleClass::class)
+        );
 
         self::assertIsArray($objects);
         self::assertCount(2, $objects);
@@ -302,7 +342,12 @@ class JsonLDNormalizerTest extends TestCase
         }
         JSON;
 
-        $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+        $serializer->deserialize(
+            $testJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(NestedClass::class)
+        );
     }
 
     public function testNestedNormalizeMissingClassException() : void
@@ -359,5 +404,12 @@ class JsonLDNormalizerTest extends TestCase
         $parent->setChildren([$obj1, $obj2]);
 
         $serializer->serialize($parent, JsonLDEncoder::FORMAT);
+    }
+
+    private function getContextWithMapping(string $className) : array
+    {
+        return [
+            JsonLDNormalizer::MAPPPING_KEY => new MappingEndpoint($className, 'http://localhost/blah')
+        ];
     }
 }
