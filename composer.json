@@ -42,5 +42,10 @@
         "psr-4": {
             "Bookboon\\JsonLDClient\\Tests\\": "Tests/"
         }
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true
+        }
     }
 }
