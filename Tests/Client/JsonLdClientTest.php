@@ -9,6 +9,7 @@ use Bookboon\JsonLDClient\Client\JsonLDResponseException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\SimpleClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedArrayClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\OtherModels\SimpleClass as OtherSimpleClass;
@@ -211,26 +212,61 @@ class JsonLdClientTest extends TestCase
     {
         $testJson = <<<JSON
         {
+            "@type": "NestedClass",
+            "string": "test value 3",
+            "simpleClass": {
+                "@type": "SimpleClass",
+                "value": "test value 1"
+            }
+        }
+        JSON;
+
+        $testObject = new NestedClass();
+        $testObject->setString("test value 2");
+        $simple = new SimpleClass();
+        $simple->setValue('test value 1');
+        $testObject->setSimpleClass($simple);
+
+        $client = $this->getClient($testJson);
+        $entity = $client->update($testObject);
+
+        self::assertInstanceOf(NestedClass::class, $entity);
+        self::assertEquals('test value 3', $entity->getString());
+
+        $simple = $entity->getSimpleClass();
+        self::assertNotNull($simple);
+        self::assertInstanceOf(SimpleClass::class, $simple);
+        self::assertEquals('test value 1', $simple->getValue());
+
+        self::assertNotNull($this->mockHandler->getLastRequest());
+        self::assertEquals("PUT", $this->mockHandler->getLastRequest()->getMethod());
+        self::assertEquals('/nested', $this->mockHandler->getLastRequest()->getUri()->getPath());
+    }
+
+    public function testPersist_Create() : void
+    {
+        $testJson = <<<JSON
+        {
             "@type": "SimpleClass",
             "value": "test value 3"
         }
         JSON;
 
         $testObject = new SimpleClass();
-        $testObject->setValue("test value 2");
+        $testObject->setValue("test value 3");
 
         $client = $this->getClient($testJson);
-        $entity = $client->update($testObject);
+        $entity = $client->create($testObject);
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 3', $entity->getValue());
 
         self::assertNotNull($this->mockHandler->getLastRequest());
-        self::assertEquals("PUT", $this->mockHandler->getLastRequest()->getMethod());
-        self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
+        self::assertEquals("POST", $this->mockHandler->getLastRequest()->getMethod());
+        self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testPersist_Create() : void
+    public function testPersist_NonCollection_Create() : void
     {
         $testJson = <<<JSON
         {
@@ -450,7 +486,8 @@ class JsonLdClientTest extends TestCase
                 new MappingEndpoint(SimpleClass::class, 'http://localhost/simple'),
                 new MappingEndpoint(NestedArrayClass::class, 'http://localhost/nestedarray'),
                 new MappingEndpoint(OtherSimpleClass::class, 'http://otherhost/simple'),
-                new MappingEndpoint(OtherNestedArrayClass::class, 'http://otherhost/nestedarray')
+                new MappingEndpoint(OtherNestedArrayClass::class, 'http://otherhost/nestedarray'),
+                new MappingEndpoint(NestedClass::class, 'http://otherhost/nested', [], false)
                 ]
             ),
             $cache

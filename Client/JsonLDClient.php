@@ -62,16 +62,17 @@ class JsonLDClient
      */
     public function persist($object, array $params = [])
     {
-        $this->isValidObjectOrException($object);
+        $map = $this->_mappings->findEndpointByClass(get_class($object));
+        $this->isValidObjectOrException($object, false, $map->isCollection());
 
         $httpVerb = 'POST';
         $url = $this->getUrl($object, $params);
-        if ($object->getId()) {
+        if ($map->isCollection() && $object->getId()) {
             $httpVerb = 'PUT';
             $url .= '/' . $object->getId();
         }
 
-        return $this->prepareRequest($object, $httpVerb, $url, $params);
+        return $this->prepareRequest($object, $httpVerb, $url, $map, $params);
     }
 
     /**
@@ -85,9 +86,10 @@ class JsonLDClient
      */
     public function create($object, array $params = [])
     {
-        $this->isValidObjectOrException($object);
+        $map = $this->_mappings->findEndpointByClass(get_class($object));
+        $this->isValidObjectOrException($object, false, $map->isCollection());
 
-        return $this->prepareRequest($object, "POST", $this->getUrl($object, $params), $params);
+        return $this->prepareRequest($object, 'POST', $this->getUrl($object, $params), $map, $params);
     }
 
     /**
@@ -101,11 +103,15 @@ class JsonLDClient
      */
     public function update($object, array $params = [])
     {
-        $this->isValidObjectOrException($object, true);
+        $map = $this->_mappings->findEndpointByClass(get_class($object));
+        $this->isValidObjectOrException($object, true, $map->isCollection());
 
-        $url = sprintf('%s/%s', $this->getUrl($object, $params), $object->getId());
+        $url = $this->getUrl($object, $params);
+        if ($map->isCollection()) {
+            $url = sprintf('%s/%s', $url, $object->getId());
+        }
 
-        return $this->prepareRequest($object, "PUT", $url, $params);
+        return $this->prepareRequest($object, "PUT", $url, $map, $params);
     }
 
     public function delete(object $object, array $params = []): void
@@ -114,7 +120,10 @@ class JsonLDClient
 
         $map = $this->_mappings->findEndpointByClass(get_class($object));
 
-        $url = sprintf('%s/%s', $map->getUrl($params), $object->getId());
+        $url = $this->getUrl($object, $params);
+        if ($map->isCollection()) {
+            $url = sprintf('%s/%s', $url, $object->getId());
+        }
 
         $this->makeRequest($url, 'DELETE', [], '');
 
@@ -133,6 +142,11 @@ class JsonLDClient
     public function getMany(string $className, array $params): ApiIterable
     {
         $map = $this->_mappings->findEndpointByClass($className);
+
+        if ($map->isCollection() === false) {
+            throw new JsonLDException('Cannot getMany on non-collection');
+        }
+
         $url = $map->getUrl($params);
 
         /** @var ApiIterable<T> $iter */
@@ -143,6 +157,22 @@ class JsonLDClient
         );
 
         return $iter;
+    }
+
+    /**
+     * @template T
+     * @psalm-param class-string<T> $className
+     * @param array $params
+     * @param bool $useCache
+     * @return T
+     * @throws JsonLDException
+     * @throws JsonLDNotFoundException
+     * @throws JsonLDResponseException
+     * @throws JsonLDSerializationException
+     */
+    public function getSingleton(string $className, array $params = [], bool $useCache = false)
+    {
+        return $this->getById('', $className, $params, $useCache);
     }
 
     /**
@@ -160,8 +190,12 @@ class JsonLDClient
     public function getById(string $id, string $className, array $params = [], bool $useCache = false)
     {
         $map = $this->_mappings->findEndpointByClass($className);
+        
+        $url = $map->getUrl($params);
+        if ($map->isCollection()) {
+            $url = sprintf('%s/%s', $url, $id);
+        }
 
-        $url = sprintf('%s/%s', $map->getUrl($params), $id);
         $jsonContents = null;
         $cacheKey = $this->cacheKey($id);
 
@@ -206,14 +240,20 @@ class JsonLDClient
      * @param T $object
      * @param string $httpVerb
      * @param string $url
+     * @param MappingEndpoint $map
      * @param array $params
      * @return T
      * @throws JsonLDNotFoundException
      * @throws JsonLDResponseException
      * @throws JsonLDSerializationException
      */
-    protected function prepareRequest($object, string $httpVerb, string $url, array $params = [])
-    {
+    protected function prepareRequest(
+        $object,
+        string $httpVerb,
+        string $url,
+        MappingEndpoint $map,
+        array $params = []
+    ) {
         $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
 
         $response = $this->makeRequest($url, $httpVerb, $params, $jsonContents);
@@ -221,8 +261,6 @@ class JsonLDClient
         if ($this->_cache && $object->getId()) {
             $this->_cache->delete($this->cacheKey($object->getId()));
         }
-
-        $map = $this->_mappings->findEndpointByClass(get_class($object));
 
         /** @var T $object */
         $object = $this->deserialize(
@@ -318,8 +356,12 @@ class JsonLDClient
      * @return void
      * @throws JsonLDException
      */
-    protected function isValidObjectOrException(object $object, bool $checkId = false): void
+    protected function isValidObjectOrException(object $object, bool $checkId = false, bool $isCollected = true): void
     {
+        if ($isCollected !== true) {
+            return;
+        }
+
         if (false === method_exists($object, 'getId')) {
             throw new JsonLDException('Cannot persist object without getId method');
         }

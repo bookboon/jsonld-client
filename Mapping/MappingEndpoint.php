@@ -10,8 +10,9 @@ class MappingEndpoint
     protected string $uri;
     protected array $propertyMap;
     protected array $reversePropertyMap;
+    protected bool $isCollection;
 
-    public function __construct(string $type, string $uri, array $propertyMap = [])
+    public function __construct(string $type, string $uri, array $propertyMap = [], bool $collection = true)
     {
         if (strpos($type, "\\") === false) {
             throw new MappingException('Must use full className');
@@ -21,6 +22,7 @@ class MappingEndpoint
         $this->uri = $uri;
         $this->propertyMap = $propertyMap;
         $this->reversePropertyMap = array_flip($propertyMap);
+        $this->isCollection = $collection;
     }
 
     /**
@@ -114,6 +116,11 @@ class MappingEndpoint
         }
 
         return '';
+    }
+
+    public function isCollection() : bool
+    {
+        return $this->isCollection;
     }
 
     protected function endsWith(string $haystack, string $needle): bool
