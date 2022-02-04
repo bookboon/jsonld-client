@@ -25,8 +25,6 @@ class SerializerHelper
         $reflectionExtractor = new ReflectionExtractor();
         $propertyExtractor = new PropertyInfoExtractor(
             [
-                $docblockExtractor,
-                $reflectionExtractor
             ],
             [
                 $docblockExtractor,
