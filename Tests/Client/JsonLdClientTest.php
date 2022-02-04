@@ -186,28 +186,6 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testPersist_Success() : void
-    {
-        $testJson = <<<JSON
-        {
-            "@type": "SimpleClass",
-            "value": "test value 2"
-        }
-        JSON;
-
-        $testObject = new SimpleClass();
-        $testObject->setValue("test value 2");
-
-        $client = $this->getClient($testJson);
-        $entity = $client->persist($testObject);
-
-        self::assertInstanceOf(SimpleClass::class, $entity);
-        self::assertEquals('test value 2', $entity->getValue());
-
-        self::assertNotNull($this->mockHandler->getLastRequest());
-        self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
-    }
-
     public function testPersist_Update() : void
     {
         $testJson = <<<JSON
@@ -363,7 +341,7 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testPersist_Cache_Success() : void
+    public function testUpdate_Cache_Success() : void
     {
         $testJson = <<<JSON
         {
@@ -381,7 +359,7 @@ class JsonLdClientTest extends TestCase
         $testObject->setValue("test value 2");
 
         $client = $this->getClient($testJson, $cacheStub);
-        $entity = $client->persist($testObject);
+        $entity = $client->update($testObject);
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 2', $entity->getValue());

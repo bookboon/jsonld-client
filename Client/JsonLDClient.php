@@ -53,33 +53,6 @@ class JsonLDClient
      * @param T $object
      * @param array $params
      * @return T
-     * @throws JsonLDException
-     * @throws JsonLDNotFoundException
-     * @throws JsonLDResponseException
-     * @throws JsonLDSerializationException
-     * @deprecated
-     *
-     */
-    public function persist($object, array $params = [])
-    {
-        $map = $this->_mappings->findEndpointByClass(get_class($object));
-        $this->isValidObjectOrException($object, false, $map->isCollection());
-
-        $httpVerb = 'POST';
-        $url = $this->getUrl($object, $params);
-        if ($map->isCollection() && $object->getId()) {
-            $httpVerb = 'PUT';
-            $url .= '/' . $object->getId();
-        }
-
-        return $this->prepareRequest($object, $httpVerb, $url, $map, $params);
-    }
-
-    /**
-     * @template T
-     * @param T $object
-     * @param array $params
-     * @return T
      * @throws JsonLDNotFoundException
      * @throws JsonLDResponseException
      * @throws JsonLDSerializationException
