@@ -38,7 +38,8 @@ class MappingCollection
 
             $endpoints[] = new MappingEndpoint(
                 strpos($map['type'], "\\") === false ? "$defaultNamespace\\{$map['type']}" : $map['type'],
-                $map['uri']
+                $map['uri'],
+                $map['renamed_properties'] ?? [],
             );
         }
         return new self($endpoints, $defaultNamespace);

@@ -2,6 +2,7 @@
 
 namespace Bookboon\JsonLDClient\Serializer;
 
+use Bookboon\JsonLDClient\Client\JsonLDException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Models\ApiError;
@@ -113,6 +114,13 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
             throw new JsonLDSerializationException('Cannot find class: ' . $attemptType, 0, null);
         }
 
+        try {
+            $endpoint = $this->collection->findEndpointByClass($class);
+            $data = $endpoint->denormaliseData($data);
+        } catch (JsonLDException $e) {
+            // do nothing
+        }
+
         return $this->normalizer->denormalize($data, $class, $format, $context);
     }
 
@@ -137,6 +145,15 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
         };
 
         $result = $this->normalizer->normalize($data, $format, $context);
+
+        if (is_object($data) && is_array($result)) {
+            try {
+                $endpoint = $this->collection->findEndpointByClass(get_class($data));
+                $result = $endpoint->normaliseData($result);
+            } catch (JsonLDException $e) {
+                // do nothing
+            }
+        }
 
         if ($data instanceof \stdClass) {
             return is_array($result) ? $result : [$result];
