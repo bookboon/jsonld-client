@@ -33,7 +33,12 @@ class MappingCollection
                 throw new MappingException('Invalid uri');
             }
 
-            $endpoints[] = new MappingEndpoint($map['type'], $map['uri'], $map['renamed_properties'] ?? []);
+            $endpoints[] = new MappingEndpoint(
+                $map['type'],
+                $map['uri'],
+                $map['renamed_properties'] ?? [],
+                $map['collection'] ?? true
+            );
         }
 
         return new self($endpoints);
