@@ -61,7 +61,8 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
     {
         return isset($data['@type']) ||
             isset($data[0]['@type']) ||
-            in_array($type, [ApiErrorResponse::class, ApiError::class. '[]'], true);
+            in_array($type, [ApiErrorResponse::class, ApiError::class. '[]'], true) ||
+            ($data === [] && substr($type, -2) === '[]');
     }
 
     public function denormalize($data, $type, $format = null, array $context = [])

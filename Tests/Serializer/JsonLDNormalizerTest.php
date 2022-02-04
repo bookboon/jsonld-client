@@ -151,6 +151,26 @@ class JsonLDNormalizerTest extends TestCase
         self::assertEquals('different value', $object->getSimpleClasses()[1]->getValue());
     }
 
+    public function testEmptyNestedArrayDeserialize() : void
+    {
+        $serializer = SerializerHelper::create([]);
+        $testJson = <<<JSON
+        {
+            "@type": "NestedArrayClass",
+            "string": "some random string",
+            "simpleClasses": [
+            ]
+        }
+        JSON;
+
+        $object = $serializer->deserialize($testJson, '', JsonLDEncoder::FORMAT);
+
+        self::assertInstanceOf(NestedArrayClass::class, $object);
+        self::assertEquals("some random string", $object->getString());
+        self::assertIsArray($object->getSimpleClasses());
+        self::assertCount(0, $object->getSimpleClasses());
+    }
+
     public function testArrayDeserialize() : void
     {
         $serializer = SerializerHelper::create([]);
