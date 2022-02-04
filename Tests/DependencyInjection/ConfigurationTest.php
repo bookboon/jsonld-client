@@ -37,16 +37,12 @@ class ConfigurationTest extends TestCase
             [
                 'jsonldclient' => [
                     'mappings' => [
-                        'Class' => 'https://test'
-                    ],
-                    'default_class_namespace' => 'TestApp\\Entity'
+                        'TestApp\\Entity\\Class' => 'https://test'
+                    ]
                 ]
             ],
             $container = $this->getContainer()
         );
-
-        self::assertTrue($container->hasParameter($this->root . ".default_class_namespace"));
-        self::assertEquals("TestApp\\Entity", $container->getParameter($this->root . ".default_class_namespace"));
 
         $expected = [
             new MappingEndpoint('TestApp\\Entity\\Class', 'https://test')
@@ -65,8 +61,7 @@ class ConfigurationTest extends TestCase
                 'jsonldclient' => [
                     'mappings' => [
                         'OtherApp\\Entity\\Class' => 'https://test'
-                    ],
-                    'default_class_namespace' => 'TestApp\\Entity'
+                    ]
                 ]
             ],
             $container = $this->getContainer()
@@ -89,11 +84,10 @@ class ConfigurationTest extends TestCase
                 'jsonldclient' => [
                     'mappings' => [
                         [
-                            'type' => 'Class',
+                            'type' => 'TestApp\\Entity\\Class',
                             'uri' => 'https://test'
                         ]
-                    ],
-                    'default_class_namespace' => 'TestApp\\Entity'
+                    ]
                 ]
             ],
             $container = $this->getContainer()
@@ -116,10 +110,9 @@ class ConfigurationTest extends TestCase
                 'jsonldclient' => [
                     'mappings' => [
                         [
-                            'type' => 'Class'
+                            'type' => 'TestApp\\Entity\\Class'
                         ]
-                    ],
-                    'default_class_namespace' => 'TestApp\\Entity'
+                    ]
                 ]
             ],
             $container = $this->getContainer()

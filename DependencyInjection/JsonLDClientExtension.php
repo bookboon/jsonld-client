@@ -33,13 +33,8 @@ class JsonLDClientExtension extends Extension
         $container->register(MappingCollection::class, MappingCollection::class)
             ->setFactory(array(MappingCollection::class, 'create'))
             ->addArgument($config['mappings'])
-            ->addArgument($config['default_class_namespace'])
             ->setPublic(false);
 
-        $container->setParameter(
-            "{$this->getAlias()}.default_class_namespace",
-            $config['default_class_namespace']
-        );
 
         $loader = new YamlFileLoader(
             $container,

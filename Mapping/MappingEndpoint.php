@@ -107,6 +107,15 @@ class MappingEndpoint
         return $data;
     }
 
+    public function getClassNamespace() : string
+    {
+        if ($pos = strrpos($this->type, '\\')) {
+            return substr($this->type, 0, $pos);
+        }
+
+        return '';
+    }
+
     protected function endsWith(string $haystack, string $needle): bool
     {
         return substr($haystack, -strlen($needle)) === $needle;

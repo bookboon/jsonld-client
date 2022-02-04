@@ -19,7 +19,7 @@ class Configuration implements ConfigurationInterface
         $treeBuilder
             ->getRootNode()
             ->children()
-            ->scalarNode('default_class_namespace')->isRequired()->end()
+            ->scalarNode('default_class_namespace')->setDeprecated()->end()
             ->arrayNode('mappings')
                 ->beforeNormalization()
                     ->ifArray()

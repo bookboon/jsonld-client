@@ -5,6 +5,7 @@ namespace Bookboon\JsonLDClient\Serializer;
 use Bookboon\JsonLDClient\Client\JsonLDException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
+use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Models\ApiError;
 use Bookboon\JsonLDClient\Models\ApiErrorResponse;
 use Bookboon\JsonLDClient\Models\ApiSource;
@@ -15,6 +16,8 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwareNormalizerInterface
 {
+    public const MAPPPING_KEY = 'endpoint';
+
     private MappingCollection $collection;
     private ObjectNormalizer $normalizer;
     private JsonLDCircularReferenceHandler $circularReferenceHandler;
@@ -108,7 +111,13 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
         }
 
         $attemptType = $data['@type'];
-        $class = $this->collection->findClassByShortNameOrDefault($attemptType);
+        $defaultNamespace = '';
+        $map = $context[self::MAPPPING_KEY] ?? null;
+        if ($map instanceof MappingEndpoint) {
+            $defaultNamespace = $map->getClassNamespace();
+        }
+
+        $class = $this->collection->findClassByShortNameOrDefault($attemptType, $defaultNamespace);
 
         if (false === class_exists($class)) {
             throw new JsonLDSerializationException('Cannot find class: ' . $attemptType, 0, null);

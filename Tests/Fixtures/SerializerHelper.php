@@ -34,7 +34,7 @@ class SerializerHelper
 
         $propertyAccessor = new PropertyAccessor();
 
-        $collection = new MappingCollection($mappings, 'Bookboon\JsonLDClient\Tests\Fixtures\Models');
+        $collection = new MappingCollection($mappings);
         $normalizer = new ObjectNormalizer(null, null, $propertyAccessor, $propertyExtractor, null, null, $defaultContext);
         $serializer = new Serializer(
             [
