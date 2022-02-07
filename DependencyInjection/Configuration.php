@@ -30,7 +30,7 @@ class Configuration implements ConfigurationInterface
                                 'type' => $type,
                                 'uri' => $uri,
                                 'renamed_properties' => [],
-                                'collection' => true
+                                'singleton' => false
                             ];
                         }
                         return $outArray;
@@ -47,7 +47,7 @@ class Configuration implements ConfigurationInterface
                             ->scalarPrototype()->end()
                             ->defaultValue([])
                         ->end()
-                        ->booleanNode('collection')->defaultTrue()->end()
+                        ->booleanNode('singleton')->defaultFalse()->end()
                     ->end()
                 ->end()
             ->end()
