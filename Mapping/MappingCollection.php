@@ -37,7 +37,7 @@ class MappingCollection
                 $map['type'],
                 $map['uri'],
                 $map['renamed_properties'] ?? [],
-                $map['collection'] ?? true
+                $map['singleton'] ?? false
             );
         }
 

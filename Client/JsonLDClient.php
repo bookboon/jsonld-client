@@ -60,7 +60,7 @@ class JsonLDClient
     public function create($object, array $params = [])
     {
         $map = $this->_mappings->findEndpointByClass(get_class($object));
-        $this->isValidObjectOrException($object, false, $map->isCollection());
+        $this->isValidObjectOrException($object, false, $map->isSingleton());
 
         return $this->prepareRequest($object, 'POST', $this->getUrl($object, $params), $map, $params);
     }
@@ -77,10 +77,10 @@ class JsonLDClient
     public function update($object, array $params = [])
     {
         $map = $this->_mappings->findEndpointByClass(get_class($object));
-        $this->isValidObjectOrException($object, true, $map->isCollection());
+        $this->isValidObjectOrException($object, true, $map->isSingleton());
 
         $url = $this->getUrl($object, $params);
-        if ($map->isCollection()) {
+        if (false === $map->isSingleton()) {
             $url = sprintf('%s/%s', $url, $object->getId());
         }
 
@@ -94,7 +94,7 @@ class JsonLDClient
         $map = $this->_mappings->findEndpointByClass(get_class($object));
 
         $url = $this->getUrl($object, $params);
-        if ($map->isCollection()) {
+        if (false === $map->isSingleton()) {
             $url = sprintf('%s/%s', $url, $object->getId());
         }
 
@@ -116,7 +116,7 @@ class JsonLDClient
     {
         $map = $this->_mappings->findEndpointByClass($className);
 
-        if ($map->isCollection() === false) {
+        if ($map->isSingleton()) {
             throw new JsonLDException('Cannot getMany on non-collection');
         }
 
@@ -165,7 +165,7 @@ class JsonLDClient
         $map = $this->_mappings->findEndpointByClass($className);
         
         $url = $map->getUrl($params);
-        if ($map->isCollection()) {
+        if (false === $map->isSingleton()) {
             $url = sprintf('%s/%s', $url, $id);
         }
 
@@ -329,9 +329,9 @@ class JsonLDClient
      * @return void
      * @throws JsonLDException
      */
-    protected function isValidObjectOrException(object $object, bool $checkId = false, bool $isCollected = true): void
+    protected function isValidObjectOrException(object $object, bool $checkId = false, bool $singleton = false): void
     {
-        if ($isCollected !== true) {
+        if ($singleton) {
             return;
         }
 

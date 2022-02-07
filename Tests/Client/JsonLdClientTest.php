@@ -465,7 +465,7 @@ class JsonLdClientTest extends TestCase
                 new MappingEndpoint(NestedArrayClass::class, 'http://localhost/nestedarray'),
                 new MappingEndpoint(OtherSimpleClass::class, 'http://otherhost/simple'),
                 new MappingEndpoint(OtherNestedArrayClass::class, 'http://otherhost/nestedarray'),
-                new MappingEndpoint(NestedClass::class, 'http://otherhost/nested', [], false)
+                new MappingEndpoint(NestedClass::class, 'http://otherhost/nested', [], true)
                 ]
             ),
             $cache
