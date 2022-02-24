@@ -10,6 +10,7 @@ use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularChild;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParent;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParentWithId;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\ClassWithObjectProperty;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DatedClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DynamicArrayClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedArrayClass;
@@ -406,7 +407,30 @@ class JsonLDNormalizerTest extends TestCase
         $serializer->serialize($parent, JsonLDEncoder::FORMAT);
     }
 
-    private function getContextWithMapping(string $className) : array
+    public function testClassWithObjectProperty(): void
+    {
+        $serializer = SerializerHelper::create([]);
+        $testJson = '{"@type":"ClassWithObjectProperty","objectProperty":{"hello":"helloworld"}}';
+
+        /** @var ClassWithObjectProperty $classWithObjectProperty */
+        $classWithObjectProperty = $serializer->deserialize(
+            $testJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(ClassWithObjectProperty::class)
+        );
+
+        $objProperty = $classWithObjectProperty->getObjectProperty();
+        $this->assertNotNull($objProperty);
+
+        $this->assertEquals('helloworld', $objProperty->hello);
+
+        $serializedJson = $serializer->serialize($classWithObjectProperty, JsonLDEncoder::FORMAT);
+
+        $this->assertJsonStringEqualsJsonString($testJson, $serializedJson);
+    }
+
+    private function getContextWithMapping(string $className): array
     {
         return [
             JsonLDNormalizer::MAPPPING_KEY => new MappingEndpoint($className, 'http://localhost/blah')

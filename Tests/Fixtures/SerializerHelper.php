@@ -8,6 +8,7 @@ use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
 use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
 use Bookboon\JsonLDClient\Serializer\NullableDateTimeNormalizer;
+use Bookboon\JsonLDClient\Serializer\StdClassNormalizer;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
@@ -39,7 +40,8 @@ class SerializerHelper
         $serializer = new Serializer(
             [
                 new JsonLDNormalizer($normalizer, $collection),
-                new NullableDateTimeNormalizer()
+                new NullableDateTimeNormalizer(),
+                new StdClassNormalizer(),
             ],
             [
                 new JsonLDEncoder(),
