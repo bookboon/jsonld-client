@@ -7,6 +7,10 @@ services:
     tags:
       - serializer.normalizer
 
+  Bookboon\JsonLDClient\Serializer\StdClassNormalizer:
+    tags:
+      - serializer.normalizer
+
   jsonldclient.handlerstack:
     class: GuzzleHttp\HandlerStack
     factory: ['GuzzleHttp\HandlerStack', 'create']
