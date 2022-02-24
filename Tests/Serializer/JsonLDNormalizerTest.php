@@ -10,6 +10,7 @@ use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularChild;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParent;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParentWithId;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\ClassWithBooleans;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DatedClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DynamicArrayClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedArrayClass;
@@ -404,6 +405,27 @@ class JsonLDNormalizerTest extends TestCase
         $parent->setChildren([$obj1, $obj2]);
 
         $serializer->serialize($parent, JsonLDEncoder::FORMAT);
+    }
+
+    public function testBooleanParamsDoNotHavePrefixRemoved() : void
+    {
+        $serializer = SerializerHelper::create([]);
+
+        $obj1 = new ClassWithBooleans;
+        $obj1->setIsEnabled(true);
+
+        $json = $serializer->serialize($obj1, JsonLDEncoder::FORMAT);
+
+        /** @var ClassWithBooleans $deserializedObj */
+
+        $deserializedObj = $serializer->deserialize(
+            $json,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(SimpleClass::class)
+        );
+
+        $this->assertEquals($obj1->isEnabled(), $deserializedObj->isEnabled());
     }
 
     private function getContextWithMapping(string $className) : array
