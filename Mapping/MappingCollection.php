@@ -73,12 +73,14 @@ class MappingCollection
             return "Bookboon\JsonLDClient\Models\\$shortClass";
         }
 
+        $classFromMapping = null;
         foreach ($this->mappings as $mapping) {
             if ($mapping->matchesShortName($shortClass)) {
-                return $mapping->getType();
+                $classFromMapping = $mapping->getType();
             }
         }
 
-        return $defaultNamespace . '\\' . $shortClass;
+        $guessedClassName = $defaultNamespace . '\\' . $shortClass;
+        return class_exists($guessedClassName) || $classFromMapping === null ? $guessedClassName : $classFromMapping;
     }
 }
