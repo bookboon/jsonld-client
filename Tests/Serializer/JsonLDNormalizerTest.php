@@ -7,11 +7,13 @@ use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
 use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\ChildClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularChild;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParent;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParentWithId;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\ClassWithObjectProperty;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DatedClass;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\DummyClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DynamicArrayClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedArrayClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedClass;
@@ -428,6 +430,38 @@ class JsonLDNormalizerTest extends TestCase
         $serializedJson = $serializer->serialize($classWithObjectProperty, JsonLDEncoder::FORMAT);
 
         $this->assertJsonStringEqualsJsonString($testJson, $serializedJson);
+    }
+
+    public function testPrefersClassInOwnNamespaceRatherThanMapping(): void
+    {
+        $dummyClass = new DummyClass;
+        $dummyClass->setName("dummyclass");
+        $childClass = new ChildClass;
+        $childClass->setTitle("childclass");
+
+        $dummyClass->setChildClass($childClass);
+
+        $serializer = SerializerHelper::create([
+            new MappingEndpoint(DummyClass::class, '/api/v1/dummies', [
+                'value' => '@DummyClass'
+            ]),
+            new MappingEndpoint(DummyClass::class, '/api/v1/childclasses', [
+                'value' => '@ChildClass'
+            ])
+        ]);
+        $serializedJson = $serializer->serialize($dummyClass, JsonLDEncoder::FORMAT);
+
+        /** @var DummyClass $dummyClass */
+        $dummyClass = $serializer->deserialize(
+            $serializedJson,
+            '',
+            JsonLDEncoder::FORMAT,
+            $this->getContextWithMapping(ClassWithObjectProperty::class)
+        );
+
+        $childClass = $dummyClass->getChildClass();
+        $this->assertNotNull($childClass);
+        $this->assertEquals('childclass', $childClass->getTitle());
     }
 
     private function getContextWithMapping(string $className): array
