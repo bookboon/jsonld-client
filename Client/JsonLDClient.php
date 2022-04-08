@@ -203,7 +203,7 @@ class JsonLDClient
     /**
      * @return AccessTokenInterface|null
      */
-    protected function getAccessToken(): ?AccessTokenInterface
+    public function getAccessToken(): ?AccessTokenInterface
     {
         return $this->accessToken;
     }
