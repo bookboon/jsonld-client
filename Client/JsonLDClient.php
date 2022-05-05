@@ -11,7 +11,9 @@ use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
 use Exception;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
+use Iterator;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -109,10 +111,11 @@ class JsonLDClient
      * @template T
      * @psalm-param class-string<T> $className
      * @param array $params
-     * @return ApiIterable<T>
+     * @param bool $useCache
+     * @return Iterator<T>
      * @throws JsonLDException
      */
-    public function getMany(string $className, array $params): ApiIterable
+    public function getMany(string $className, array $params, bool $useCache = false): Iterator
     {
         $map = $this->_mappings->findEndpointByClass($className);
 
@@ -124,7 +127,44 @@ class JsonLDClient
 
         /** @var ApiIterable<T> $iter */
         $iter = new ApiIterable(
-            fn(array $params2) => $this->makeRequest($url, 'GET', $params2),
+            function (array $params2) use ($url, $className, $useCache) {
+                ksort($params2);
+                $cacheKey = $this->parameterisedCacheKey($className, "$url?" . http_build_query($params2));
+                $serialised = null;
+
+                if ($useCache && $this->_cache) {
+                    $raw = $this->_cache->get($cacheKey, null);
+                    if ($raw !== null) {
+                        $serialised = json_decode($this->_cache->get($cacheKey, null),
+                            true,
+                            512,
+                            JSON_THROW_ON_ERROR);
+                    }
+                }
+
+                if ($serialised === null) {
+                    $response = $this->makeRequest($url, 'GET', $params2);
+
+                    $serialised = [
+                        'code' => $response->getStatusCode(),
+                        'headers' => $response->getHeaders(),
+                        'version' => $response->getProtocolVersion(),
+                        'reason' => $response->getReasonPhrase(),
+                        'body' => $response->getBody()->getContents(),
+                    ];
+                }
+
+                if ($useCache && $this->_cache && $serialised) {
+                    $this->_cache->set($cacheKey, json_encode($serialised), self::CACHE_TIME);
+                }
+
+                return new Response($serialised['code'],
+                    $serialised['headers'],
+                    $serialised['body'],
+                    $serialised['version'],
+                    $serialised['reason']
+                );
+            },
             fn(string $data) => $this->deserialize($data, $map),
             $params
         );
@@ -163,7 +203,7 @@ class JsonLDClient
     public function getById(string $id, string $className, array $params = [], bool $useCache = false)
     {
         $map = $this->_mappings->findEndpointByClass($className);
-        
+
         $url = $map->getUrl($params);
         if (false === $map->isSingleton()) {
             $url = sprintf('%s/%s', $url, $id);
@@ -226,7 +266,8 @@ class JsonLDClient
         string $url,
         MappingEndpoint $map,
         array $params = []
-    ) {
+    )
+    {
         $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
 
         $response = $this->makeRequest($url, $httpVerb, $params, $jsonContents);
@@ -244,7 +285,7 @@ class JsonLDClient
         return $object;
     }
 
-    protected function getUrl(object $object, array $params = []) : string
+    protected function getUrl(object $object, array $params = []): string
     {
         $map = $this->_mappings->findEndpointByClass(get_class($object));
 
@@ -261,9 +302,9 @@ class JsonLDClient
      * @throws JsonLDNotFoundException
      */
     protected function makeRequest(
-        string $url,
-        string $httpVerb = 'GET',
-        array $queryParams = [],
+        string  $url,
+        string  $httpVerb = 'GET',
+        array   $queryParams = [],
         ?string $jsonContents = null
     ): ResponseInterface
     {
@@ -354,6 +395,13 @@ class JsonLDClient
         return $unique ? "jsonld_{$unique}_{$id}" : "jsonld_{$id}";
     }
 
+    protected function parameterisedCacheKey(string $className, string $url): string
+    {
+        $key = base64_encode(sha1($url));
+
+        return "jsonld_{$className}_$key";
+    }
+
     /**
      * @param string $jsonContents
      * @param MappingEndpoint|null $map
@@ -363,16 +411,17 @@ class JsonLDClient
      * @throws JsonLDSerializationException
      */
     protected function deserialize(
-        string $jsonContents,
+        string           $jsonContents,
         ?MappingEndpoint $map,
-        string $type = '',
-        string $format = JsonLDEncoder::FORMAT
-    ) {
+        string           $type = '',
+        string           $format = JsonLDEncoder::FORMAT
+    )
+    {
         $context = [];
         if ($map !== null) {
             $context[JsonLDNormalizer::MAPPPING_KEY] = $map;
         }
-        
+
         try {
             return $this->_serializer->deserialize($jsonContents, $type, $format, $context);
         } catch (Exception $e) {
