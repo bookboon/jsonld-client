@@ -2,14 +2,15 @@
 
 namespace Bookboon\JsonLDClient\Serializer;
 
+use ArrayObject;
 use Bookboon\JsonLDClient\Client\JsonLDException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Models\ApiError;
 use Bookboon\JsonLDClient\Models\ApiErrorResponse;
-use Bookboon\JsonLDClient\Models\ApiSource;
 use DateTime;
+use stdClass;
 use Symfony\Component\Serializer\Normalizer\ContextAwareDenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ContextAwareNormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -57,8 +58,9 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
             (is_object($data) && $format === JsonLDEncoder::FORMAT)
             || $this->isDataArray($data)
             )
-            && !($data instanceof DateTime
-            );
+            && !($data instanceof DateTime)
+            && !($data instanceof ArrayObject)
+            && !($data instanceof stdClass);
     }
 
     public function supportsDenormalization($data, $type, $format = null, array $context = [])
@@ -137,7 +139,7 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
      * @param mixed $data
      * @param mixed $format
      * @param array $context
-     * @return array|bool|float|int|string
+     * @return array|bool|float|int|string|ArrayObject
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
     protected function normalizeItem($data, $format, array $context)
@@ -162,10 +164,6 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
             } catch (JsonLDException $e) {
                 // do nothing
             }
-        }
-
-        if ($data instanceof \stdClass) {
-            return is_array($result) ? $result : [$result];
         }
 
         return array_merge(

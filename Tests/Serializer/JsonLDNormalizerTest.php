@@ -2,6 +2,7 @@
 
 namespace Bookboon\JsonLDClient\Tests\Serializer;
 
+use ArrayObject;
 use Bookboon\JsonLDClient\Client\JsonLDException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
@@ -11,7 +12,7 @@ use Bookboon\JsonLDClient\Tests\Fixtures\Models\ChildClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularChild;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParent;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularParentWithId;
-use Bookboon\JsonLDClient\Tests\Fixtures\Models\ClassWithObjectProperty;
+use Bookboon\JsonLDClient\Tests\Fixtures\Models\ClassWithMapProperty;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DatedClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DummyClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\DynamicArrayClass;
@@ -224,7 +225,7 @@ class JsonLDNormalizerTest extends TestCase
             JsonLDEncoder::FORMAT,
             $this->getContextWithMapping(NestedArrayClass::class)
         );
-        
+
         self::assertInstanceOf(NestedArrayClass::class, $object);
         self::assertEquals("some random string", $object->getString());
         self::assertIsArray($object->getSimpleClasses());
@@ -412,20 +413,21 @@ class JsonLDNormalizerTest extends TestCase
     public function testClassWithObjectProperty(): void
     {
         $serializer = SerializerHelper::create([]);
-        $testJson = '{"@type":"ClassWithObjectProperty","objectProperty":{"hello":"helloworld"}}';
+        $testJson = '{"@type":"ClassWithMapProperty","objectProperty":{"hello":"helloworld"}}';
 
-        /** @var ClassWithObjectProperty $classWithObjectProperty */
+        /** @var ClassWithMapProperty $classWithObjectProperty */
         $classWithObjectProperty = $serializer->deserialize(
             $testJson,
             '',
             JsonLDEncoder::FORMAT,
-            $this->getContextWithMapping(ClassWithObjectProperty::class)
+            $this->getContextWithMapping(ClassWithMapProperty::class)
         );
 
         $objProperty = $classWithObjectProperty->getObjectProperty();
         $this->assertNotNull($objProperty);
 
-        $this->assertEquals('helloworld', $objProperty->hello);
+        $this->assertInstanceOf(ArrayObject::class, $objProperty);
+        $this->assertEquals('helloworld', $objProperty["hello"]);
 
         $serializedJson = $serializer->serialize($classWithObjectProperty, JsonLDEncoder::FORMAT);
 
@@ -456,7 +458,7 @@ class JsonLDNormalizerTest extends TestCase
             $serializedJson,
             '',
             JsonLDEncoder::FORMAT,
-            $this->getContextWithMapping(ClassWithObjectProperty::class)
+            $this->getContextWithMapping(ClassWithMapProperty::class)
         );
 
         $childClass = $dummyClass->getChildClass();
