@@ -53,6 +53,13 @@ services:
     tags:
       - serializer.normalizer
 
+  Bookboon\JsonLDClient\Serializer\JsonLDMapNormalizer:
+    arguments:
+      - '@jsonldclient.object_normalizer'
+      - '@Bookboon\JsonLDClient\Mapping\MappingCollection'
+    tags:
+      - serializer.normalizer
+
   Bookboon\JsonLDClient\Client\JsonLDClient:
     arguments:
       - '@jsonldclient.client'
