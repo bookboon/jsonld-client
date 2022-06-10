@@ -5,7 +5,10 @@ namespace Bookboon\JsonLDClient\DependencyInjection;
 use Bookboon\ApiBundle\Configuration\ApiConfiguration;
 use Bookboon\ApiBundle\Helper\ConfigurationHolder;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
+use Bookboon\JsonLDClient\Serializer\JsonLDMapNormalizer;
+use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -33,8 +36,8 @@ class JsonLDClientExtension extends Extension
         $container->register(MappingCollection::class, MappingCollection::class)
             ->setFactory(array(MappingCollection::class, 'create'))
             ->addArgument($config['mappings'])
+            ->addArgument($config['apis'] ?? '')
             ->setPublic(false);
-
 
         $loader = new YamlFileLoader(
             $container,

@@ -3,7 +3,9 @@
 
 namespace Bookboon\JsonLDClient\Tests\Fixtures\Models;
 
+use Bookboon\JsonLDClient\Attributes\JsonLDEntity;
 
+#[JsonLDEntity(url: '/nested-array')]
 class NestedArrayClass
 {
     protected string $string = '';

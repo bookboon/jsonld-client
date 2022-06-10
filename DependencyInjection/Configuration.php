@@ -20,7 +20,8 @@ class Configuration implements ConfigurationInterface
             ->getRootNode()
             ->children()
             ->scalarNode('default_class_namespace')->setDeprecated()->end()
-            ->arrayNode('mappings')
+            ->arrayNode('apis')->normalizeKeys(false)->scalarPrototype()->end()->end()
+            ->arrayNode('mappings')->setDeprecated()
                 ->beforeNormalization()
                     ->ifArray()
                     ->then(static function ($v) {
@@ -36,8 +37,6 @@ class Configuration implements ConfigurationInterface
                         return $outArray;
                     })
                 ->end()
-                ->isRequired()
-                ->requiresAtLeastOneElement()
                 ->arrayPrototype()
                     ->children()
                         ->scalarNode('type')->end()

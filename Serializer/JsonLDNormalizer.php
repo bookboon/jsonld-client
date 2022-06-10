@@ -18,6 +18,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwareNormalizerInterface
 {
     public const MAPPPING_KEY = 'endpoint';
+    public const NAMESPACE_KEY = 'default_namespace';
 
     private MappingCollection $collection;
     private ObjectNormalizer $normalizer;
@@ -25,7 +26,7 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
 
     public function __construct(
         ObjectNormalizer $normalizer,
-        MappingCollection $collection
+        MappingCollection $collection,
     ) {
         $this->normalizer = $normalizer;
         $this->collection = $collection;

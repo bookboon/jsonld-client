@@ -456,17 +456,23 @@ class JsonLdClientTest extends TestCase
             ]
         );
 
+        $mappings = [
+            new MappingEndpoint(SimpleClass::class, 'http://localhost/simple'),
+            new MappingEndpoint(NestedArrayClass::class, 'http://localhost/nestedarray'),
+            new MappingEndpoint(OtherSimpleClass::class, 'http://otherhost/simple'),
+            new MappingEndpoint(OtherNestedArrayClass::class, 'http://otherhost/nestedarray'),
+            new MappingEndpoint(NestedClass::class, 'http://otherhost/nested', [], true)
+        ];
+        $apis = [
+            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
+        ];
+
         return new JsonLDClient(
             $client,
-            SerializerHelper::create([]),
+            SerializerHelper::create($mappings, [], $apis),
             new MappingCollection(
-                [
-                new MappingEndpoint(SimpleClass::class, 'http://localhost/simple'),
-                new MappingEndpoint(NestedArrayClass::class, 'http://localhost/nestedarray'),
-                new MappingEndpoint(OtherSimpleClass::class, 'http://otherhost/simple'),
-                new MappingEndpoint(OtherNestedArrayClass::class, 'http://otherhost/nestedarray'),
-                new MappingEndpoint(NestedClass::class, 'http://otherhost/nested', [], true)
-                ]
+                $mappings,
+                $apis,
             ),
             $cache
         );
