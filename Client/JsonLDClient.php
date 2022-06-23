@@ -177,7 +177,7 @@ class JsonLDClient
         }
 
         if ($jsonContents === null) {
-            $response = $this->makeRequest($url);
+            $response = $this->makeRequest($url, 'GET', $params);
             $jsonContents = $response->getBody()->getContents();
         }
 
