@@ -7,6 +7,7 @@ use Bookboon\JsonLDClient\Client\JsonLDClient;
 use Bookboon\JsonLDClient\Client\JsonLDNotFoundException;
 use Bookboon\JsonLDClient\Client\JsonLDResponseException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
+use Bookboon\JsonLDClient\Mapping\MappingApi;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Models\ApiIterable;
@@ -521,7 +522,7 @@ class JsonLdClientTest extends TestCase
             new MappingEndpoint(NestedClass::class, 'http://otherhost/nested', [], true)
         ];
         $apis = [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
+            new MappingApi('Bookboon\JsonLDClient\Tests\Fixtures\Models', 'https://example.com/api/v1')
         ];
 
         return new JsonLDClient(

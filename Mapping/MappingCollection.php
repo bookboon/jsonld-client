@@ -10,15 +10,17 @@ use Psr\SimpleCache\CacheInterface;
 class MappingCollection
 {
     protected const CACHE_PREFIX = 'api-mapping-';
+
     /** @var array<MappingEndpoint> */
     protected array $mappings;
-    /** @var array<string,string> */
+
+    /** @var array<MappingApi> */
     private array $apis;
     private ?CacheInterface $cache;
 
     /**
-     * @param array $mappings
-     * @param array<string,string> $apis
+     * @param array<MappingEndpoint> $mappings
+     * @param array<MappingApi> $apis
      * @throws MappingException
      */
     public function __construct(array $mappings, array $apis, CacheInterface $cache = null)
@@ -37,6 +39,7 @@ class MappingCollection
     public static function create(array $mappings, array $apis): MappingCollection
     {
         $endpoints = [];
+        $apiObjects = [];
 
         foreach ($mappings as $map) {
             if (!isset($map['uri'], $map['type'])) {
@@ -55,7 +58,15 @@ class MappingCollection
             );
         }
 
-        return new self($endpoints, $apis);
+        foreach ($apis as $api) {
+            if (!isset($api['uri'], $api['namespace'])) {
+                throw new MappingException('Invalid apis config');
+            }
+
+            $apiObjects[] = new MappingApi($api['namespace'], $api['uri']);
+        }
+
+        return new self($endpoints, $apiObjects);
     }
 
     /**
@@ -162,9 +173,9 @@ class MappingCollection
     }
 
     protected function findApiForClass(string $classname): string {
-        foreach ($this->apis as $namespace => $apiUrl) {
-            if (str_starts_with($classname, $namespace)) {
-                return $apiUrl;
+        foreach ($this->apis as $api) {
+            if (str_starts_with($classname, $api->getNamespace())) {
+                return $api->getUri();
             }
         }
 

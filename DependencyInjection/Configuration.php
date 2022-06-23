@@ -20,7 +20,27 @@ class Configuration implements ConfigurationInterface
             ->getRootNode()
             ->children()
             ->scalarNode('default_class_namespace')->setDeprecated()->end()
-            ->arrayNode('apis')->normalizeKeys(false)->scalarPrototype()->end()->end()
+            ->arrayNode('apis')
+                ->beforeNormalization()
+                    ->ifArray()
+                    ->then(static function ($v) {
+                        $outArray = [];
+                        foreach ($v as $namespace => $uri) {
+                            $outArray[] = isset($uri['uri']) ? $uri : [
+                                'namespace' => $namespace,
+                                'uri' => $uri
+                            ];
+                        }
+                        return $outArray;
+                    })
+                ->end()
+                ->arrayPrototype()
+                    ->children()
+                        ->scalarNode('namespace')->end()
+                        ->scalarNode('uri')->end()
+                    ->end()
+                ->end()
+            ->end()
             ->arrayNode('mappings')->setDeprecated()
                 ->beforeNormalization()
                     ->ifArray()

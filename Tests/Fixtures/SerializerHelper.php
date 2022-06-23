@@ -4,7 +4,9 @@
 namespace Bookboon\JsonLDClient\Tests\Fixtures;
 
 
+use Bookboon\JsonLDClient\Mapping\MappingApi;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
+use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
 use Bookboon\JsonLDClient\Serializer\JsonLDMapNormalizer;
 use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
@@ -15,14 +17,19 @@ use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 use Symfony\Component\Serializer\Encoder\JsonDecode;
-use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Normalizer\UnwrappingDenormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class SerializerHelper
 {
+    /**
+     * @param array<MappingEndpoint> $mappings
+     * @param array $defaultContext
+     * @param array<MappingApi> $apiRoot
+     * @return SerializerInterface
+     * @throws \Bookboon\JsonLDClient\Mapping\MappingException
+     */
     public static function create(array $mappings = [], array $defaultContext = [], array $apiRoot = []) : SerializerInterface
     {
         $docblockExtractor = new PhpDocExtractor();
