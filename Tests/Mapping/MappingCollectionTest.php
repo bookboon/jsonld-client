@@ -75,17 +75,20 @@ class MappingCollectionTest extends TestCase
                 [
                     'type' => 'OtherApp\Test'
                 ]
-            ],[]
+            ],
+            []
         );
     }
 
     public function testInvalidConstructor() : void
     {
         $this->expectException(MappingException::class);
+        /** @psalm-suppress InvalidArgument */
         $collection = new MappingCollection(
             [
                 new SimpleClass()
-            ],[]
+            ],
+            []
         );
     }
 

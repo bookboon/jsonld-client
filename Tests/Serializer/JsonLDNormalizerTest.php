@@ -5,6 +5,7 @@ namespace Bookboon\JsonLDClient\Tests\Serializer;
 use ArrayObject;
 use Bookboon\JsonLDClient\Client\JsonLDException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
+use Bookboon\JsonLDClient\Mapping\MappingApi;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
 use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
@@ -25,13 +26,14 @@ use Bookboon\JsonLDClient\Tests\Fixtures\SerializerHelper;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class JsonLDNormalizerTest extends TestCase
 {
     public function testSimpleDeserialize(): void
     {
         $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
+            new MappingApi('Bookboon\JsonLDClient\Tests\Fixtures\Models', 'http://example.com/api/v1')
         ]);
         $testJson = <<<JSON
         {
@@ -58,7 +60,7 @@ class JsonLDNormalizerTest extends TestCase
                 'value' => '@MangledValue'
             ]),
         ], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'http://example.com'
+            new MappingApi('Bookboon\JsonLDClient\Tests\Fixtures\Models', 'http://example.com')
         ]);
 
         $testJson = <<<JSON
@@ -121,7 +123,7 @@ class JsonLDNormalizerTest extends TestCase
     public function testNestedDeserialize(): void
     {
         $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
+            new MappingApi('Bookboon\JsonLDClient\Tests\Fixtures\Models', 'http://example.com/api/v1')
         ]);
         $testJson = <<<JSON
         {
@@ -152,7 +154,7 @@ class JsonLDNormalizerTest extends TestCase
     public function testNestedWithoutDocDeserialize(): void
     {
         $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
+            new MappingApi('Bookboon\JsonLDClient\Tests\Fixtures\Models', 'http://example.com/api/v1')
         ]);
         $testJson = <<<JSON
         {
@@ -184,7 +186,7 @@ class JsonLDNormalizerTest extends TestCase
     public function testNestedArrayDeserialize(): void
     {
         $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'http://example.com'
+            new MappingApi('Bookboon\JsonLDClient\Tests\Fixtures\Models', 'http://example.com')
         ]);
         $testJson = <<<JSON
         {
@@ -221,7 +223,7 @@ class JsonLDNormalizerTest extends TestCase
     public function testNestedArraySerialize(): void
     {
         $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'http://example.com'
+            new MappingApi('Bookboon\JsonLDClient\Tests\Fixtures\Models', 'http://example.com')
         ]);
         $obj = new NestedArrayClass();
         $simp1 = new SimpleClass();
@@ -259,7 +261,7 @@ class JsonLDNormalizerTest extends TestCase
     public function testEmptyNestedArrayDeserialize(): void
     {
         $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
+            new MappingApi('Bookboon\JsonLDClient\Tests\Fixtures\Models', 'https://example.com/api/v1')
         ]);
         $testJson = <<<JSON
         {
@@ -285,9 +287,7 @@ class JsonLDNormalizerTest extends TestCase
 
     public function testArrayDeserialize(): void
     {
-        $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
-        ]);
+        $serializer = $this->getSerializerHelper();
         $testJson = <<<JSON
         [
             {
@@ -316,9 +316,7 @@ class JsonLDNormalizerTest extends TestCase
 
     public function testSimpleSerialize(): void
     {
-        $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
-        ]);
+        $serializer = $this->getSerializerHelper();
         $expectJson = '{"@type":"SimpleClassNoMangling","value":"some other string","id":"232d2c41-278a-4377-bd9d-c6046494ceaf"}';
         $testObject = new SimpleClassNoMangling();
         $testObject->setValue('some other string');
@@ -330,14 +328,19 @@ class JsonLDNormalizerTest extends TestCase
 
     public function testSerializeWithMapping(): void
     {
-        $serializer = SerializerHelper::create([
-            new MappingEndpoint('Bookboon\JsonLDClient\Tests\Fixtures\Models\SimpleClassNoMangling', '', [
-                'value' => '@MangledValue'
-            ])
-        ],
+        $serializer = SerializerHelper::create(
+            [
+                new MappingEndpoint(
+                    'Bookboon\JsonLDClient\Tests\Fixtures\Models\SimpleClassNoMangling',
+                    '',
+                    [
+                        'value' => '@MangledValue'
+                    ]
+                )
+            ],
             [],
             [
-                'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
+                new MappingApi('Bookboon\JsonLDClient\Tests\Fixtures\Models', 'https://example.com/api/v1')
             ]
         );
 
@@ -352,10 +355,7 @@ class JsonLDNormalizerTest extends TestCase
 
     public function testSerializeWithoutMapping(): void
     {
-        $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
-        ]);
-
+        $serializer = $this->getSerializerHelper();
         $expectJson = '{"@type":"SimpleClass","id":"232d2c41-278a-4377-bd9d-c6046494ceaf","@MangledValue":"some other string"}';
         $testObject = new SimpleClass();
         $testObject->setValue('some other string');
@@ -367,9 +367,7 @@ class JsonLDNormalizerTest extends TestCase
 
     public function testArraySerialize(): void
     {
-        $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
-        ]);
+        $serializer = $this->getSerializerHelper();
         $expectJson = '[{"@type":"SimpleClassNoMangling","value":"some other string","id":"232d2c41-278a-4377-bd9d-c6046494ceaf"},{"@type":"SimpleClassNoMangling","value":"different value","id":"232d2c41-278a-4377-bd9d-c6046494ceaf"}]';
 
         $obj1 = new SimpleClassNoMangling();
@@ -387,9 +385,7 @@ class JsonLDNormalizerTest extends TestCase
 
     public function testDataArraySerializer(): void
     {
-        $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
-        ]);
+        $serializer = $this->getSerializerHelper();
         $expectJson = '{"@type":"DynamicArrayClass","array":{"MapArray":[{"label":"english","iso":"en"},{"label":"deutsche","iso":"de"}]},"id":"3e147484-01fd-4176-b8f4-43ef623fb092"}';
 
         $dynamicArrayObj = new DynamicArrayClass;
@@ -414,9 +410,7 @@ class JsonLDNormalizerTest extends TestCase
     public function testNestedNormalizeNoTypeException(): void
     {
         $this->expectException(NotNormalizableValueException::class);
-        $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
-        ]);
+        $serializer = $this->getSerializerHelper();
         $testJson = <<<JSON
         {
             "@type": "NestedClass",
@@ -438,9 +432,7 @@ class JsonLDNormalizerTest extends TestCase
     public function testNestedNormalizeMissingClassException(): void
     {
         $this->expectException(JsonLDSerializationException::class);
-        $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
-        ]);
+        $serializer = $this->getSerializerHelper();
         $testJson = <<<JSON
         {
             "@type": "NotFoundClass",
@@ -453,9 +445,7 @@ class JsonLDNormalizerTest extends TestCase
 
     public function testCircularSerialize(): void
     {
-        $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
-        ]);
+        $serializer = $this->getSerializerHelper();
         $expectJson = '{"@type":"CircularParentWithId","id":"232d2c41-278a-4377-bd9d-c6046494ceaf","children":[{"@type":"CircularChild","value":"some other string","parent":{"@type":"CircularParentWithId","@id":"232d2c41-278a-4377-bd9d-c6046494ceaf","id":"232d2c41-278a-4377-bd9d-c6046494ceaf"}},{"@type":"CircularChild","value":"different value","parent":{"@type":"CircularParentWithId","@id":"232d2c41-278a-4377-bd9d-c6046494ceaf","id":"232d2c41-278a-4377-bd9d-c6046494ceaf"}}]}';
 
         $obj1 = new CircularChild();
@@ -478,9 +468,7 @@ class JsonLDNormalizerTest extends TestCase
     public function testCircularSerialize_NoId(): void
     {
         $this->expectException(JsonLDException::class);
-        $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
-        ]);
+        $serializer = $this->getSerializerHelper();
 
         $obj1 = new CircularChild();
         $obj1->setValue('some other string');
@@ -499,9 +487,8 @@ class JsonLDNormalizerTest extends TestCase
 
     public function testClassWithObjectProperty(): void
     {
-        $serializer = SerializerHelper::create([], [], [
-            'Bookboon\JsonLDClient\Tests\Fixtures\Models' => 'https://example.com/api/v1'
-        ]);
+        $serializer = $this->getSerializerHelper();
+
         $testJson = '{"@type":"ClassWithMapProperty","objectProperty":{"hello":"helloworld"}}';
 
         /** @var ClassWithMapProperty $classWithObjectProperty */
@@ -560,5 +547,19 @@ class JsonLDNormalizerTest extends TestCase
         return [
             JsonLDNormalizer::MAPPPING_KEY => new MappingEndpoint($className, 'http://localhost/blah')
         ];
+    }
+
+    private function getSerializerHelper() : SerializerInterface
+    {
+        return SerializerHelper::create(
+            [],
+            [],
+            [
+                new MappingApi(
+                    'Bookboon\JsonLDClient\Tests\Fixtures\Models',
+                    'https://example.com/api/v1'
+                )
+            ]
+        );
     }
 }

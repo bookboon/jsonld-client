@@ -59,7 +59,11 @@ class LinkParser
         $parameters = [ApiIterable::LIMIT, ApiIterable::OFFSET];
 
         $parsedUrl = parse_url($content, PHP_URL_QUERY);
-        parse_str($parsedUrl, $queryParams);
+        $queryParams = [];
+
+        if (is_string($parsedUrl)) {
+            parse_str($parsedUrl, $queryParams);
+        }
 
         foreach ($parameters as $param) {
             if (array_key_exists($param, $queryParams)) {
