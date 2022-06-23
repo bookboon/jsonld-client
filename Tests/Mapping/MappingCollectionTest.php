@@ -20,7 +20,7 @@ class MappingCollectionTest extends TestCase
                     'type' => 'App\Entity\Test',
                     'uri' => 'http://',
                 ]
-            ]
+            ], []
         );
 
         self::assertEquals('App\Entity\Test', $collection->get()[0]->getType());
@@ -34,7 +34,7 @@ class MappingCollectionTest extends TestCase
                     'type' => 'OtherApp\Test',
                     'uri' => 'http://',
                 ]
-            ]
+            ], []
         );
 
         self::assertEquals('OtherApp\Test', $collection->get()[0]->getType());
@@ -48,7 +48,7 @@ class MappingCollectionTest extends TestCase
                     'type' => 'OtherApp\Test',
                     'uri' => 'https://',
                 ]
-            ]
+            ],[]
         );
 
         self::assertEquals('OtherApp\Test', $collection->get()[0]->getType());
@@ -63,7 +63,7 @@ class MappingCollectionTest extends TestCase
                     'type' => 'OtherApp\Test',
                     'uri' => '://',
                 ]
-            ]
+            ],[]
         );
     }
 
@@ -75,7 +75,7 @@ class MappingCollectionTest extends TestCase
                 [
                     'type' => 'OtherApp\Test'
                 ]
-            ]
+            ],[]
         );
     }
 
@@ -85,19 +85,19 @@ class MappingCollectionTest extends TestCase
         $collection = new MappingCollection(
             [
                 new SimpleClass()
-            ]
+            ],[]
         );
     }
 
     public function testFindClassByShortNameOrDefault_ApiErrorResponse() : void
     {
-        $collection = new MappingCollection([]);
+        $collection = new MappingCollection([], []);
         self::assertEquals(ApiErrorResponse::class, $collection->findClassByShortNameOrDefault('ApiErrorResponse', 'Bookboon\JsonLDClient'));
     }
 
     public function testFindClassByShortNameOrDefault_ApiError() : void
     {
-        $collection = new MappingCollection([]);
+        $collection = new MappingCollection([], []);
         self::assertEquals(ApiError::class, $collection->findClassByShortNameOrDefault('ApiError', 'Bookboon\JsonLDClient'));
     }
 
@@ -105,7 +105,7 @@ class MappingCollectionTest extends TestCase
     {
         $collection = new MappingCollection([
             new MappingEndpoint(SimpleClass::class, 'http://test')
-        ]);
+        ],[]);
 
         self::assertEquals(SimpleClass::class, $collection->findClassByShortNameOrDefault('SimpleClass', 'Bookboon\JsonLDClient\Tests\Fixtures'));
     }

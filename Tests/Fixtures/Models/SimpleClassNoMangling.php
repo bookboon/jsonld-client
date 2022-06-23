@@ -3,12 +3,10 @@
 namespace Bookboon\JsonLDClient\Tests\Fixtures\Models;
 
 use Bookboon\JsonLDClient\Attributes\JsonLDEntity;
-use Bookboon\JsonLDClient\Attributes\JsonLDProperty;
 
 #[JsonLDEntity(url: '/simple')]
-class SimpleClass
+class SimpleClassNoMangling
 {
-    #[JsonLDProperty(mappedName: '@MangledValue')]
     protected string $value = '';
 
     /**

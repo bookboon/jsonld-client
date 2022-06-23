@@ -49,13 +49,13 @@ class JsonLDMapNormalizer extends JsonLDNormalizer
      *       ]
      *  ];
      *
-     * @param $data
-     * @param $type
-     * @param $format
+     * @param mixed $data
+     * @param string $type
+     * @param string $format
      * @param array $context
      * @return bool
      */
-    public function supportsDenormalization($data, $type, $format = null, array $context = [])
+    public function supportsDenormalization($data, $type, $format = null, array $context = []): bool
     {
         return $this->isDataArray($data);
     }

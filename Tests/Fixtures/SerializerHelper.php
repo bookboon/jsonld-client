@@ -23,7 +23,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class SerializerHelper
 {
-    public static function create(array $mappings = [], array $defaultContext = []) : SerializerInterface
+    public static function create(array $mappings = [], array $defaultContext = [], array $apiRoot = []) : SerializerInterface
     {
         $docblockExtractor = new PhpDocExtractor();
         $reflectionExtractor = new ReflectionExtractor();
@@ -38,7 +38,7 @@ class SerializerHelper
 
         $propertyAccessor = new PropertyAccessor();
 
-        $collection = new MappingCollection($mappings);
+        $collection = new MappingCollection($mappings, $apiRoot);
         $normalizer = new ObjectNormalizer(null, null, $propertyAccessor, $propertyExtractor, null, null, $defaultContext);
         $serializer = new Serializer(
             [

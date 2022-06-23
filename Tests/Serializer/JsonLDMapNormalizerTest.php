@@ -81,14 +81,14 @@ class JsonLDMapNormalizerTest extends TestCase
 
     public function testSupportsMethodReturnsFalseWhenDataIsNotArray(): void
     {
-        $jsonLDMapNormalizer = new JsonLDMapNormalizer(new ObjectNormalizer(), new MappingCollection([]));
+        $jsonLDMapNormalizer = new JsonLDMapNormalizer(new ObjectNormalizer(), new MappingCollection([], []));
 
         $this->assertFalse($jsonLDMapNormalizer->supportsDenormalization(new DateTime(), ''), "types that are not arrays should return false");
     }
 
     public function testSupportsMethodReturnsTrueWhenMapValuesHaveTypePropertyDefined(): void
     {
-        $jsonLDMapNormalizer = new JsonLDMapNormalizer(new ObjectNormalizer(), new MappingCollection([]));
+        $jsonLDMapNormalizer = new JsonLDMapNormalizer(new ObjectNormalizer(), new MappingCollection([], []));
 
         $exampleMap = [
             "key1" => [
