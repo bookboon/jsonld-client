@@ -9,6 +9,8 @@ use Bookboon\JsonLDClient\Client\JsonLDResponseException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
+use Bookboon\JsonLDClient\Models\ApiIterable;
+use Bookboon\JsonLDClient\Tests\Fixtures\MemoryCache;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\SimpleClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedArrayClass;
@@ -406,6 +408,59 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
+    public function testGetAll_Cached(): void
+    {
+        $cache = new MemoryCache;
+        $client = $this->getClientForResponses([
+            new Response(200, [],'[
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 1"
+                },
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 2"
+                }
+            ]'), new Response(200, [], '[]')
+        ], $cache);
+
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        self::assertCount(2, $iterator);
+
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        self::assertCount(2, $iterator);
+
+        $iterator = $client->getMany(SimpleClass::class, ['b' => 'c', 'a' => 'b'], true);
+        self::assertCount(2, $iterator);
+
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'c'], true);
+        self::assertCount(0, $iterator);
+    }
+
+    public function testGetAll_UnCached(): void
+    {
+        $cache = new MemoryCache;
+        $client = $this->getClientForResponses([
+            new Response(200, [],'[
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 1"
+                },
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 2"
+                }
+            ]'), new Response(200, [], '[]')
+        ], $cache);
+
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b']);
+        self::assertCount(2, $iterator);
+
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b']);
+        self::assertCount(0, $iterator);
+    }
+
+
     public function testGetById_Other_Nested_Success() : void
     {
         $testJson = <<<JSON
@@ -438,13 +493,15 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/nestedarray/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    protected function getClient(string $body, CacheInterface $cache = null) : JsonLDClient
+    protected function getClient(string $body, CacheInterface $cache = null) : JsonLDClient {
+        return $this->getClientForResponses([
+            new Response(200, [], $body)
+        ], $cache);
+    }
+
+    protected function getClientForResponses(array $responses, CacheInterface $cache = null) : JsonLDClient
     {
-        $this->mockHandler = new MockHandler(
-            [
-                new Response(200, [], $body)
-            ]
-        );
+        $this->mockHandler = new MockHandler($responses);
 
         $handlerStack = HandlerStack::create($this->mockHandler);
         $client = new Client(
