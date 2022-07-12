@@ -4,6 +4,8 @@ services:
       - serializer.encoder
 
   Bookboon\JsonLDClient\Serializer\NullableDateTimeNormalizer:
+    arguments:
+      - '@serializer.normalizer.datetime'
     tags:
       - serializer.normalizer
 
