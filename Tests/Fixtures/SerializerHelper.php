@@ -17,6 +17,7 @@ use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 use Symfony\Component\Serializer\Encoder\JsonDecode;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -51,7 +52,7 @@ class SerializerHelper
             [
                 new JsonLDNormalizer($normalizer, $collection),
                 new JsonLDMapNormalizer($normalizer, $collection),
-                new NullableDateTimeNormalizer(),
+                new NullableDateTimeNormalizer(new DateTimeNormalizer()),
                 new StdClassNormalizer(),
             ],
             [

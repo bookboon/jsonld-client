@@ -53,7 +53,7 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
         return $this->normalizeItem($object, $format, $context);
     }
 
-    public function supportsNormalization($data, $format = null, array $context = [])
+    public function supportsNormalization($data, $format = null, array $context = []) : bool
     {
         return (
             (is_object($data) && $format === JsonLDEncoder::FORMAT)
@@ -64,7 +64,7 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
             && !($data instanceof stdClass);
     }
 
-    public function supportsDenormalization($data, $type, $format = null, array $context = [])
+    public function supportsDenormalization($data, $type, $format = null, array $context = []) : bool
     {
         return isset($data['@type']) ||
             isset($data[0]['@type']) ||

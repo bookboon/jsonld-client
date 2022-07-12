@@ -60,7 +60,7 @@ class JsonLDMapNormalizer extends JsonLDNormalizer
         return $this->isDataArray($data);
     }
 
-    public function supportsNormalization($data, $format = null, array $context = [])
+    public function supportsNormalization($data, $format = null, array $context = []) : bool
     {
         return $data instanceof ArrayObject;
     }

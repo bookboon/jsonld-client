@@ -8,12 +8,12 @@ class JsonLDEncoder extends JsonEncoder
 {
     const FORMAT = 'json-ld';
 
-    public function supportsEncoding($format)
+    public function supportsEncoding($format) : bool
     {
         return self::FORMAT === $format;
     }
 
-    public function supportsDecoding($format)
+    public function supportsDecoding($format) : bool
     {
         return self::FORMAT === $format;
     }
