@@ -19,7 +19,7 @@ class Configuration implements ConfigurationInterface
         $treeBuilder
             ->getRootNode()
             ->children()
-            ->scalarNode('default_class_namespace')->setDeprecated()->end()
+            ->scalarNode('default_class_namespace')->setDeprecated("bookboon/jsonld-client","v2.0")->end()
             ->arrayNode('apis')
                 ->beforeNormalization()
                     ->ifArray()
@@ -41,7 +41,7 @@ class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
             ->end()
-            ->arrayNode('mappings')->setDeprecated()
+            ->arrayNode('mappings')->setDeprecated("bookboon/jsonld-client","v2.0")
                 ->beforeNormalization()
                     ->ifArray()
                     ->then(static function ($v) {

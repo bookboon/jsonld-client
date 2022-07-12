@@ -29,7 +29,7 @@ class GuzzleClientFactory
     private static function getTracingHeaders(RequestStack $requestFactory): array
     {
         $headers = [];
-        $request = $requestFactory->getMasterRequest();
+        $request = $requestFactory->getMainRequest();
 
         if ($request !== null) {
             foreach ($request->headers as $key => $value) {

@@ -47,7 +47,7 @@ class JsonLDClientExtension extends Extension
         $loader->load('services.yml');
     }
 
-    public function getAlias()
+    public function getAlias() : string
     {
         return 'jsonldclient';
     }
