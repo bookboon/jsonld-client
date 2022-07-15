@@ -6,8 +6,10 @@ use ArrayObject;
 use Bookboon\JsonLDClient\Client\JsonLDException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingApi;
+use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
+use Bookboon\JsonLDClient\Serializer\JsonLDMapNormalizer;
 use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\ChildClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\CircularChild;
@@ -26,6 +28,7 @@ use Bookboon\JsonLDClient\Tests\Fixtures\SerializerHelper;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class JsonLDNormalizerTest extends TestCase
@@ -542,6 +545,38 @@ class JsonLDNormalizerTest extends TestCase
         $this->assertEquals('childclass', $childClass->getTitle());
     }
 
+    public function testSupportsMethodReturnsTrueWhenFormatIsNull(): void
+    {
+        $jsonLDNormalizer = new JsonLDNormalizer(new ObjectNormalizer(), new MappingCollection([], []));
+
+        $this->assertTrue($jsonLDNormalizer->supportsDenormalization([
+            ['@type' => 'SomeClass']
+        ], ''), "if format is null should not support denormalisation of array");
+        $this->assertFalse($jsonLDNormalizer->supportsDenormalization(
+            ['@type' => 'SomeClass']
+            , ''), "if format is null should not support denormalisation of object");
+        $this->assertTrue($jsonLDNormalizer->supportsNormalization([]),
+            "if format is null should support normalisation of array");
+        $this->assertFalse($jsonLDNormalizer->supportsNormalization(new ArrayObject()),
+            "if format is null should not support normalisation of object");
+    }
+
+    public function testSupportsMethodReturnsTrueWhenFormatIsJsonLd(): void
+    {
+        $jsonLDNormalizer = new JsonLDNormalizer(new ObjectNormalizer(), new MappingCollection([], []));
+
+        $this->assertTrue($jsonLDNormalizer->supportsDenormalization([
+            ['@type' => 'SomeClass']
+        ], '', 'json-ld'), "if format is json-ld should support denormalisation");
+        $this->assertTrue($jsonLDNormalizer->supportsDenormalization(
+            ['@type' => 'SomeClass'], '', 'json-ld'
+        ), "if format is json-ld should support denormalisation");
+        $this->assertTrue($jsonLDNormalizer->supportsNormalization(new SimpleClass(), 'json-ld'),
+            "if format is json-ld should support normalisation of object");
+        $this->assertTrue($jsonLDNormalizer->supportsNormalization([], 'json-ld'),
+            "if format is json-ld should support normalisation of array");
+    }
+
     private function getContextWithMapping(string $className): array
     {
         return [
@@ -549,7 +584,7 @@ class JsonLDNormalizerTest extends TestCase
         ];
     }
 
-    private function getSerializerHelper() : SerializerInterface
+    private function getSerializerHelper(): SerializerInterface
     {
         return SerializerHelper::create(
             [],

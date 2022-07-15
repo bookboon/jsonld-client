@@ -55,8 +55,12 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
 
     public function supportsNormalization($data, $format = null, array $context = []) : bool
     {
+        if (!$this->isCorrectFormat($format, $data)) {
+            return false;
+        }
+
         return (
-            (is_object($data) && $format === JsonLDEncoder::FORMAT)
+            is_object($data)
             || $this->isDataArray($data)
             )
             && !($data instanceof DateTime)
@@ -66,6 +70,10 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
 
     public function supportsDenormalization($data, $type, $format = null, array $context = []) : bool
     {
+        if (!$this->isCorrectFormat($format, $data)) {
+            return false;
+        }
+
         return isset($data['@type']) ||
             isset($data[0]['@type']) ||
             in_array($type, [ApiErrorResponse::class, ApiError::class. '[]'], true) ||
@@ -176,5 +184,9 @@ class JsonLDNormalizer implements ContextAwareDenormalizerInterface, ContextAwar
     protected function isDataArray($data) : bool
     {
         return is_array($data) && (count($data) === 0 || (array_keys($data) === range(0, count($data) - 1)));
+    }
+
+    protected function isCorrectFormat(mixed $format, mixed $data): bool {
+        return $format === JsonLDEncoder::FORMAT || ($this->isDataArray($data) && $format === null);
     }
 }
