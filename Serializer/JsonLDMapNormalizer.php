@@ -57,11 +57,19 @@ class JsonLDMapNormalizer extends JsonLDNormalizer
      */
     public function supportsDenormalization($data, $type, $format = null, array $context = []): bool
     {
+        if (!$this->isCorrectFormat($format, $data)) {
+            return false;
+        }
+
         return $this->isDataArray($data);
     }
 
     public function supportsNormalization($data, $format = null, array $context = []) : bool
     {
+        if (!$this->isCorrectFormat($format, $data)) {
+            return false;
+        }
+
         return $data instanceof ArrayObject;
     }
 

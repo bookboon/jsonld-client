@@ -346,8 +346,7 @@ class JsonLDClient
                     $errorResponse = $this->deserialize(
                         $response->getBody()->getContents(),
                         null,
-                        ApiErrorResponse::class,
-                        'json'
+                        ApiErrorResponse::class
                     );
                 } catch (JsonLDSerializationException $e2) {
                 }

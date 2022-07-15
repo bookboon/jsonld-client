@@ -86,6 +86,30 @@ class JsonLDMapNormalizerTest extends TestCase
         $this->assertFalse($jsonLDMapNormalizer->supportsDenormalization(new DateTime(), ''), "types that are not arrays should return false");
     }
 
+    public function testSupportsMethodReturnsFalseWhenFormatIsNotJsonLD(): void
+    {
+        $jsonLDMapNormalizer = new JsonLDMapNormalizer(new ObjectNormalizer(), new MappingCollection([], []));
+
+        $this->assertFalse($jsonLDMapNormalizer->supportsDenormalization([], '', 'json'), "if format is json should return false");
+        $this->assertFalse($jsonLDMapNormalizer->supportsNormalization(new ArrayObject(), 'json'), "if format is json should return false");
+    }
+
+    public function testSupportsMethodReturnsTrueWhenFormatIsNull(): void
+    {
+        $jsonLDMapNormalizer = new JsonLDMapNormalizer(new ObjectNormalizer(), new MappingCollection([], []));
+
+        $this->assertTrue($jsonLDMapNormalizer->supportsDenormalization([], ''), "if format is null should support denormalisation");
+        $this->assertFalse($jsonLDMapNormalizer->supportsNormalization(new ArrayObject()), "if format is null should not support normalisation of object");
+    }
+
+    public function testSupportsMethodReturnsTrueWhenFormatIsJsonLD(): void
+    {
+        $jsonLDMapNormalizer = new JsonLDMapNormalizer(new ObjectNormalizer(), new MappingCollection([], []));
+
+        $this->assertTrue($jsonLDMapNormalizer->supportsDenormalization([], '', 'json-ld'), "if format is json-ld should support denormalisation");
+        $this->assertTrue($jsonLDMapNormalizer->supportsNormalization(new ArrayObject(), 'json-ld'), "if format is json-ld should support normalisation");
+    }
+
     public function testSupportsMethodReturnsTrueWhenMapValuesHaveTypePropertyDefined(): void
     {
         $jsonLDMapNormalizer = new JsonLDMapNormalizer(new ObjectNormalizer(), new MappingCollection([], []));
