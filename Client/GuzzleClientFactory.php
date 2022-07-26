@@ -5,14 +5,30 @@ namespace Bookboon\JsonLDClient\Client;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Utils;
+use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 class GuzzleClientFactory
 {
-    const USER_AGENT = 'JsonLDClient/1.2';
+    const USER_AGENT = 'JsonLDClient/2.2';
 
-    public static function create(RequestStack $requestFactory, HandlerStack $stack) : ClientInterface
-    {
+    public static function createStack(
+        ?CacheInterface $cache
+    ): HandlerStack {
+        $handler = new HandlerStack(Utils::chooseHandler());
+        if ($cache) {
+            $handler->push(new CacheMiddleware($cache));
+        }
+
+        /** @psalm-suppress InvalidArgument this is needed because Guzzle's type annotation game is not fresh enough */
+        return HandlerStack::create($handler);
+    }
+
+    public static function create(
+        RequestStack $requestFactory,
+        HandlerStack $stack,
+    ) : ClientInterface {
         return new Client(
             [
                 'headers' => array_merge(

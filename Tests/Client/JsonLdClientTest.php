@@ -3,6 +3,7 @@
 
 namespace Bookboon\JsonLDClient\Tests\Client;
 
+use Bookboon\JsonLDClient\Client\CacheMiddleware;
 use Bookboon\JsonLDClient\Client\JsonLDClient;
 use Bookboon\JsonLDClient\Client\JsonLDNotFoundException;
 use Bookboon\JsonLDClient\Client\JsonLDResponseException;
@@ -10,7 +11,6 @@ use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
 use Bookboon\JsonLDClient\Mapping\MappingApi;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
-use Bookboon\JsonLDClient\Models\ApiIterable;
 use Bookboon\JsonLDClient\Tests\Fixtures\MemoryCache;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\NestedClass;
 use Bookboon\JsonLDClient\Tests\Fixtures\Models\SimpleClass;
@@ -27,13 +27,18 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\SimpleCache\CacheInterface;
 
 class JsonLdClientTest extends TestCase
 {
+    const RELEVANT_HEADER = 'X-Bookboon-Header';
+    const IRRELEVANT_HEADER = 'X-Bookboon-Ignoreme';
+
     protected MockHandler $mockHandler;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         $this->mockHandler = new MockHandler(
             [
@@ -46,7 +51,7 @@ class JsonLdClientTest extends TestCase
      * Plain Client
      */
 
-    public function testGetById_Success() : void
+    public function testGetById_Success(): void
     {
         $testJson = <<<JSON
         {
@@ -65,7 +70,7 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testGetById_Nested_Success() : void
+    public function testGetById_Nested_Success(): void
     {
         $testJson = <<<JSON
         {
@@ -97,7 +102,7 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/nestedarray/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testGetById_SerializationError() : void
+    public function testGetById_SerializationError(): void
     {
         $this->expectException(JsonLDSerializationException::class);
         $testJson = <<<JSON
@@ -111,7 +116,7 @@ class JsonLdClientTest extends TestCase
         $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
     }
 
-    public function testGetById_ResponseCommunicationError() : void
+    public function testGetById_ResponseCommunicationError(): void
     {
         $this->expectException(JsonLDResponseException::class);
 
@@ -121,7 +126,7 @@ class JsonLdClientTest extends TestCase
         $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
     }
 
-    public function testGetById_ResponseNotFoundError() : void
+    public function testGetById_ResponseNotFoundError(): void
     {
         $this->expectException(JsonLDNotFoundException::class);
 
@@ -131,7 +136,7 @@ class JsonLdClientTest extends TestCase
         $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
     }
 
-    public function testGetById_ResponseBadRequestError() : void
+    public function testGetById_ResponseBadRequestError(): void
     {
         $this->expectException(JsonLDResponseException::class);
         $this->expectExceptionMessage("400: Bad Request");
@@ -148,7 +153,7 @@ class JsonLdClientTest extends TestCase
         $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
     }
 
-    public function testGetById_ResponseBadRequestError2() : void
+    public function testGetById_ResponseBadRequestError2(): void
     {
         $this->expectException(JsonLDResponseException::class);
         $this->expectExceptionMessage("400: Bad request");
@@ -165,7 +170,7 @@ class JsonLdClientTest extends TestCase
         $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
     }
 
-    public function testGetMany_Success() : void
+    public function testGetMany_Success(): void
     {
         $testJson = <<<JSON
         [
@@ -189,7 +194,7 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testPersist_Update() : void
+    public function testPersist_Update(): void
     {
         $testJson = <<<JSON
         {
@@ -224,7 +229,7 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/nested', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testPersist_Create() : void
+    public function testPersist_Create(): void
     {
         $testJson = <<<JSON
         {
@@ -247,7 +252,7 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testPersist_NonCollection_Create() : void
+    public function testPersist_NonCollection_Create(): void
     {
         $testJson = <<<JSON
         {
@@ -270,7 +275,7 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testDelete_Success() : void
+    public function testDelete_Success(): void
     {
         $testObject = new SimpleClass();
         $testObject->setValue("test value 2");
@@ -290,7 +295,7 @@ class JsonLdClientTest extends TestCase
     /**
      * @group test
      */
-    public function testGetById_Cache_Hit() : void
+    public function testGetById_Cache_Hit(): void
     {
         $testJson = <<<JSON
         {
@@ -301,8 +306,20 @@ class JsonLdClientTest extends TestCase
 
         /** @var Stub&CacheInterface $cacheStub */
         $cacheStub = $this->createStub(CacheInterface::class);
+        $hourAgo = (new \DateTime())->modify("-1 hour");
         $cacheStub->method('get')
-            ->willReturn($testJson);
+            ->willReturnCallback(function ($key) use ($testJson, $hourAgo) {
+                if (preg_match('#^jsonld_[^_]+$#', $key)) {
+                    return [
+                        'headers' => [],
+                        'timestamp' => $hourAgo,
+                    ];
+                }
+                return [
+                    'response' => new Response(200, [], $testJson),
+                    'timestamp' => new \DateTime(),
+                ];
+            });
 
         $client = $this->getClient($testJson, $cacheStub);
         $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, [], true);
@@ -316,7 +333,7 @@ class JsonLdClientTest extends TestCase
     /**
      * @group test
      */
-    public function testGetById_Cache_Miss() : void
+    public function testGetById_Cache_Miss(): void
     {
         $testJson = <<<JSON
         {
@@ -330,9 +347,41 @@ class JsonLdClientTest extends TestCase
         $cacheStub->method('get')
             ->willReturn(null);
 
-        $cacheStub->expects(self::once())
+        $cacheStub->expects(self::exactly(2))
             ->method('set')
-            ->with(self::equalTo('jsonld_bce73a1e-bc1f-43f5-b8dc-f05147f18978'), self::equalTo($testJson));
+            ->withConsecutive([self::equalTo('jsonld_--simple--bce73a1e-bc1f-43f5-b8dc-f05147f18978'), self::callback(function ($val) {
+                if (!isset($val['timestamp'], $val['headers'])) {
+                    return false;
+                }
+
+                if (!($val['timestamp'] instanceof \DateTimeImmutable)) {
+                    return false;
+                }
+
+                if (!is_array($val['headers']) || !empty($val['headers'])) {
+                    return false;
+                }
+
+                return true;
+            })], [self::equalTo('jsonld_--simple--bce73a1e-bc1f-43f5-b8dc-f05147f18978_c16bfa1d7236643659009b46f457c8d15b0d13b1'), self::callback(function ($val) use ($testJson) {
+                if (!isset($val['timestamp'], $val['response'])) {
+                    return false;
+                }
+
+                if (!($val['timestamp'] instanceof \DateTimeImmutable)) {
+                    return false;
+                }
+
+                if (!($val['response'] instanceof ResponseInterface)) {
+                    return false;
+                }
+
+                if ($val['response']->getBody()->getContents() != $testJson) {
+                    return false;
+                }
+
+                return true;
+            })]);
 
         $client = $this->getClient($testJson, $cacheStub);
         $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, [], true);
@@ -344,7 +393,7 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testUpdate_Cache_Success() : void
+    public function testUpdate_Cache_Success(): void
     {
         $testJson = <<<JSON
         {
@@ -371,7 +420,7 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    public function testDelete_Cache_Success() : void
+    public function testDelete_Cache_Success(): void
     {
         $testObject = new SimpleClass();
         $testObject->setValue("test value 2");
@@ -390,7 +439,7 @@ class JsonLdClientTest extends TestCase
     }
 
 
-    public function testGetById_Other_Success() : void
+    public function testGetById_Other_Success(): void
     {
         $testJson = <<<JSON
         {
@@ -413,7 +462,7 @@ class JsonLdClientTest extends TestCase
     {
         $cache = new MemoryCache;
         $client = $this->getClientForResponses([
-            new Response(200, [],'[
+            new Response(200, [], '[
                 {
                     "@type": "SimpleClass",
                     "value": "test value 1"
@@ -438,11 +487,112 @@ class JsonLdClientTest extends TestCase
         self::assertCount(0, $iterator);
     }
 
+    public function testGetAll_Cached_Vary(): void
+    {
+        $cache = new MemoryCache;
+        $headerValue = '3';
+        $irrelevantValue = 'i like cookies';
+        $middleware = function (callable $handler) use (&$headerValue, &$irrelevantValue) {
+            return function (RequestInterface $request, array $options) use (&$handler, &$headerValue, &$irrelevantValue) {
+                $request = $request->withHeader(self::RELEVANT_HEADER, $headerValue);
+                $request = $request->withHeader(self::IRRELEVANT_HEADER, $irrelevantValue);
+                return $handler($request, $options);
+            };
+        };
+        $client = $this->getClientForResponses([
+            new Response(200, [
+                'Vary' => self::RELEVANT_HEADER . ", Accept-Language",
+            ], '[
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 1"
+                },
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 2"
+                }
+            ]'), new Response(200, [], '[]')
+        ], $cache, [$middleware]);
+
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        self::assertCount(2, $iterator);
+
+        // re-do with same headers
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        self::assertCount(2, $iterator);
+
+        // re-do with only irrelevant header changed
+        $irrelevantValue = 'i do not like cookies';
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        self::assertCount(2, $iterator);
+
+        // re-do with different header
+        $headerValue = '4';
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        self::assertCount(0, $iterator);
+    }
+
+    public function testGetAll_Cached_Invalidate(): void
+    {
+        $cache = new MemoryCache;
+        $headerValue = '3';
+        $irrelevantValue = 'i like cookies';
+        $middleware = function (callable $handler) use (&$headerValue, &$irrelevantValue) {
+            return function (RequestInterface $request, array $options) use (&$handler, &$headerValue, &$irrelevantValue) {
+                $request = $request->withHeader(self::RELEVANT_HEADER, $headerValue);
+                $request = $request->withHeader(self::IRRELEVANT_HEADER, $irrelevantValue);
+                return $handler($request, $options);
+            };
+        };
+        $client = $this->getClientForResponses([
+            new Response(200, [
+                'Vary' => self::RELEVANT_HEADER . ", Accept-Language",
+            ], '[
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 1"
+                },
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 2"
+                }
+            ]'), new Response(200, [], '{
+                    "@type": "SimpleClass",
+                    "value": "test value 3"
+            }'), new Response(200, [], '[
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 1"
+                },
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 2"
+                },
+                {
+                    "@type": "SimpleClass",
+                    "value": "test value 3"
+                }
+            ]')
+        ], $cache, [$middleware]);
+
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        self::assertCount(2, $iterator);
+
+        // post to endpoint
+        $new = new SimpleClass();
+        $new->setValue('test value 3');
+        $client->create($new);
+
+        // re-do with same headers
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        self::assertCount(3, $iterator);
+    }
+
     public function testGetAll_UnCached(): void
     {
         $cache = new MemoryCache;
         $client = $this->getClientForResponses([
-            new Response(200, [],'[
+            new Response(200, [], '[
                 {
                     "@type": "SimpleClass",
                     "value": "test value 1"
@@ -462,7 +612,7 @@ class JsonLdClientTest extends TestCase
     }
 
 
-    public function testGetById_Other_Nested_Success() : void
+    public function testGetById_Other_Nested_Success(): void
     {
         $testJson = <<<JSON
         {
@@ -494,17 +644,27 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/nestedarray/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    protected function getClient(string $body, CacheInterface $cache = null) : JsonLDClient {
+    protected function getClient(string $body, CacheInterface $cache = null): JsonLDClient
+    {
         return $this->getClientForResponses([
             new Response(200, [], $body)
         ], $cache);
     }
 
-    protected function getClientForResponses(array $responses, CacheInterface $cache = null) : JsonLDClient
+    protected function getClientForResponses(array $responses, ?CacheInterface $cache = null, array $extraMiddleware = []): JsonLDClient
     {
         $this->mockHandler = new MockHandler($responses);
 
         $handlerStack = HandlerStack::create($this->mockHandler);
+
+        foreach ($extraMiddleware as $m) {
+            $handlerStack->push($m);
+        }
+
+        if ($cache) {
+            $handlerStack->push(new CacheMiddleware($cache));
+        }
+
         $client = new Client(
             [
                 'handler' => $handlerStack,
@@ -532,7 +692,6 @@ class JsonLdClientTest extends TestCase
                 $mappings,
                 $apis,
             ),
-            $cache
         );
     }
 }
