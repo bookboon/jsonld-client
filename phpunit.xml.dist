@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/9.0/phpunit.xsd"
-         backupGlobals="false"
-         colors="true"
-         bootstrap="./vendor/autoload.php">
-
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false" backupStaticAttributes="false" colors="true" bootstrap="vendor/autoload.php" convertDeprecationsToExceptions="true" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
     <testsuites>
         <testsuite name="Project Test Suite">
             <directory>Tests/</directory>
@@ -18,4 +13,16 @@
             <directory>serializer/</directory>
         </whitelist>
     </filter>
+
+    <coverage>
+        <include>
+            <directory>./</directory>
+        </include>
+        <exclude>
+            <directory>./Resources</directory>
+            <directory>./Tests</directory>
+            <directory>./vendor</directory>
+            <directory>./var</directory>
+        </exclude>
+    </coverage>
 </phpunit>
