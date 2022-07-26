@@ -1,0 +1,14 @@
+include:
+  - project: 'internal/ci'
+    ref: main
+    file:
+      - '/environment/v1/variables.yml'
+      - '/test/v1/base.yml'
+
+stages:
+  - test
+  - build
+  - security
+
+variables:
+  PHP_IMAGE: registry.bookbooncloud.com/docker/php-base:8.1.8
