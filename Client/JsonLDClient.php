@@ -16,16 +16,12 @@ use GuzzleHttp\RequestOptions;
 use Iterator;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class JsonLDClient
 {
-    private const CACHE_TIME = 1800;
-
     private SerializerInterface $_serializer;
     private MappingCollection $_mappings;
-    private ?CacheInterface $_cache = null;
     private ClientInterface $_client;
 
     private ?AccessTokenInterface $accessToken = null;
@@ -35,19 +31,16 @@ class JsonLDClient
      * @param ClientInterface $client
      * @param SerializerInterface $serializer
      * @param MappingCollection $mappings
-     * @param CacheInterface|null $cache
      */
     public function __construct(
         ClientInterface $client,
         SerializerInterface $serializer,
         MappingCollection $mappings,
-        ?CacheInterface $cache
     )
     {
         $this->_client = $client;
         $this->_serializer = $serializer;
         $this->_mappings = $mappings;
-        $this->_cache = $cache;
     }
 
     /**
@@ -101,10 +94,6 @@ class JsonLDClient
         }
 
         $this->makeRequest($url, 'DELETE', [], '');
-
-        if ($this->_cache) {
-            $this->_cache->delete($this->cacheKey($object->getId()));
-        }
     }
 
     /**
@@ -129,34 +118,15 @@ class JsonLDClient
         $iter = new ApiIterable(
             function (array $params2) use ($url, $className, $useCache) {
                 ksort($params2);
-                $cacheKey = $this->parameterisedCacheKey($className, "$url?" . http_build_query($params2));
-                $serialised = null;
+                $response = $this->makeRequest($url, 'GET', $params2);
 
-                if ($useCache && $this->_cache) {
-                    $raw = $this->_cache->get($cacheKey, null);
-                    if ($raw !== null) {
-                        $serialised = json_decode($this->_cache->get($cacheKey, null),
-                            true,
-                            512,
-                            JSON_THROW_ON_ERROR);
-                    }
-                }
-
-                if ($serialised === null) {
-                    $response = $this->makeRequest($url, 'GET', $params2);
-
-                    $serialised = [
-                        'code' => $response->getStatusCode(),
-                        'headers' => $response->getHeaders(),
-                        'version' => $response->getProtocolVersion(),
-                        'reason' => $response->getReasonPhrase(),
-                        'body' => $response->getBody()->getContents(),
-                    ];
-                }
-
-                if ($useCache && $this->_cache && $serialised) {
-                    $this->_cache->set($cacheKey, json_encode($serialised), self::CACHE_TIME);
-                }
+                $serialised = [
+                    'code' => $response->getStatusCode(),
+                    'headers' => $response->getHeaders(),
+                    'version' => $response->getProtocolVersion(),
+                    'reason' => $response->getReasonPhrase(),
+                    'body' => $response->getBody()->getContents(),
+                ];
 
                 return new Response($serialised['code'],
                     $serialised['headers'],
@@ -209,21 +179,8 @@ class JsonLDClient
             $url = sprintf('%s/%s', $url, $id);
         }
 
-        $jsonContents = null;
-        $cacheKey = $this->cacheKey($id);
-
-        if ($useCache && $this->_cache) {
-            $jsonContents = $this->_cache->get($cacheKey, null);
-        }
-
-        if ($jsonContents === null) {
-            $response = $this->makeRequest($url, 'GET', $params);
-            $jsonContents = $response->getBody()->getContents();
-        }
-
-        if ($useCache && $this->_cache && $jsonContents) {
-            $this->_cache->set($cacheKey, $jsonContents, self::CACHE_TIME);
-        }
+        $response = $this->makeRequest($url, 'GET', $params);
+        $jsonContents = $response->getBody()->getContents();
 
         /** @var T $object */
         $object = $this->deserialize($jsonContents, $map);
@@ -271,10 +228,6 @@ class JsonLDClient
         $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
 
         $response = $this->makeRequest($url, $httpVerb, $params, $jsonContents);
-
-        if ($this->_cache && $object->getId()) {
-            $this->_cache->delete($this->cacheKey($object->getId()));
-        }
 
         /** @var T $object */
         $object = $this->deserialize(
@@ -382,23 +335,6 @@ class JsonLDClient
         if ($checkId && strlen($object->getId()) === 0) {
             throw new JsonLDException('Invalid object id');
         }
-    }
-
-    /**
-     * @param string $id
-     * @param string|null $unique
-     * @return string
-     */
-    protected function cacheKey(string $id, ?string $unique = null): string
-    {
-        return $unique ? "jsonld_{$unique}_{$id}" : "jsonld_{$id}";
-    }
-
-    protected function parameterisedCacheKey(string $className, string $url): string
-    {
-        $key = base64_encode(sha1($url));
-
-        return "jsonld_{$className}_$key";
     }
 
     /**

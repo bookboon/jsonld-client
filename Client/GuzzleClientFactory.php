@@ -5,14 +5,22 @@ namespace Bookboon\JsonLDClient\Client;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\HandlerStack;
+use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 class GuzzleClientFactory
 {
-    const USER_AGENT = 'JsonLDClient/1.2';
+    const USER_AGENT = 'JsonLDClient/2.2';
 
-    public static function create(RequestStack $requestFactory, HandlerStack $stack) : ClientInterface
-    {
+    public static function create(
+        RequestStack $requestFactory,
+        HandlerStack $stack,
+        ?CacheInterface $cache
+    ) : ClientInterface {
+        if ($cache !== null) {
+            $stack->unshift(new CacheMiddleware($cache), 'cache');
+        }
+
         return new Client(
             [
                 'headers' => array_merge(

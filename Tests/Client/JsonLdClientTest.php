@@ -3,6 +3,7 @@
 
 namespace Bookboon\JsonLDClient\Tests\Client;
 
+use Bookboon\JsonLDClient\Client\CacheMiddleware;
 use Bookboon\JsonLDClient\Client\JsonLDClient;
 use Bookboon\JsonLDClient\Client\JsonLDNotFoundException;
 use Bookboon\JsonLDClient\Client\JsonLDResponseException;
@@ -302,7 +303,7 @@ class JsonLdClientTest extends TestCase
         /** @var Stub&CacheInterface $cacheStub */
         $cacheStub = $this->createStub(CacheInterface::class);
         $cacheStub->method('get')
-            ->willReturn($testJson);
+            ->willReturn(new Response(200, [], $testJson));
 
         $client = $this->getClient($testJson, $cacheStub);
         $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, [], true);
@@ -500,11 +501,16 @@ class JsonLdClientTest extends TestCase
         ], $cache);
     }
 
-    protected function getClientForResponses(array $responses, CacheInterface $cache = null) : JsonLDClient
+    protected function getClientForResponses(array $responses, ?CacheInterface $cache = null) : JsonLDClient
     {
         $this->mockHandler = new MockHandler($responses);
 
         $handlerStack = HandlerStack::create($this->mockHandler);
+
+        if ($cache !== null) {
+            $handlerStack->unshift(new CacheMiddleware($cache), 'cache');
+        }
+
         $client = new Client(
             [
                 'handler' => $handlerStack,
@@ -531,8 +537,7 @@ class JsonLdClientTest extends TestCase
             new MappingCollection(
                 $mappings,
                 $apis,
-            ),
-            $cache
+            )
         );
     }
 }
