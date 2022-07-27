@@ -1,6 +1,6 @@
 
 test: phpstan psalm phpunit
-	@printf "\n\n\033[0;32mAll tests passed, you are ready to push commits\033[0m"
+	@printf "\n\n\033[0;32mAll tests passed, you are ready to push commits\033[0m\n"
 
 
 phpunit:

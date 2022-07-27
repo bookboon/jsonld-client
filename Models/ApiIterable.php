@@ -113,9 +113,11 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     }
 
     /**
-     * {@inheritDoc}
+     * Return the current element
+     * @link https://php.net/manual/en/iterator.current.php
+     * @return T Can return any type.
      */
-    public function current()
+    public function current(): mixed
     {
         return $this->locate($this->position);
     }
@@ -123,7 +125,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     /**
      * {@inheritDoc}
      */
-    public function next()
+    public function next(): void
     {
         ++$this->position;
     }
@@ -131,7 +133,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     /**
      * {@inheritDoc}
      */
-    public function key()
+    public function key(): int
     {
         return $this->position;
     }
@@ -139,7 +141,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     /**
      * {@inheritDoc}
      */
-    public function valid()
+    public function valid(): bool
     {
         return $this->locate($this->position) !== null;
     }
@@ -147,7 +149,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     /**
      * {@inheritDoc}
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->position = 0;
     }
@@ -159,17 +161,17 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
      *
      * @psalm-param int $offset
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return $this->locate($this->position) !== null;
     }
 
     /**
      * {@inheritDoc}
-     *
+     * @return T
      * @psalm-param int $offset
      */
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->locate($offset);
     }
@@ -177,7 +179,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     /**
      * {@inheritDoc}
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         // Not implemented by design
     }
@@ -185,7 +187,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     /**
      * {@inheritDoc}
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         // Not implemented by design
     }
@@ -198,7 +200,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
      *
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         if (false === $this->hasRequested) {
             $this->makeRequest(0);

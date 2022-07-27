@@ -15,7 +15,7 @@ services:
 
   jsonldclient.handlerstack:
     class: GuzzleHttp\HandlerStack
-    factory: ['GuzzleHttp\HandlerStack', 'create']
+    factory: ['Bookboon\JsonLDClient\Client\GuzzleClientFactory', 'createStack']
 
   jsonldclient.client:
     class: GuzzleHttp\ClientInterface

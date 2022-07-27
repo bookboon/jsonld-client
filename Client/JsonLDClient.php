@@ -2,15 +2,18 @@
 
 namespace Bookboon\JsonLDClient\Client;
 
+use ArrayAccess;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Models\ApiErrorResponse;
 use Bookboon\JsonLDClient\Models\ApiIterable;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
 use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
+use Countable;
 use Exception;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
 use Iterator;
@@ -21,33 +24,25 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class JsonLDClient
 {
-    private const CACHE_TIME = 1800;
-
     private SerializerInterface $_serializer;
     private MappingCollection $_mappings;
-    private ?CacheInterface $_cache = null;
     private ClientInterface $_client;
 
     private ?AccessTokenInterface $accessToken = null;
 
     /**
      * JsonLdClient constructor.
-     * @param ClientInterface $client
-     * @param SerializerInterface $serializer
-     * @param MappingCollection $mappings
-     * @param CacheInterface|null $cache
+     *
      */
     public function __construct(
         ClientInterface $client,
         SerializerInterface $serializer,
         MappingCollection $mappings,
-        ?CacheInterface $cache
     )
     {
         $this->_client = $client;
         $this->_serializer = $serializer;
         $this->_mappings = $mappings;
-        $this->_cache = $cache;
     }
 
     /**
@@ -100,11 +95,8 @@ class JsonLDClient
             $url = sprintf('%s/%s', $url, $object->getId());
         }
 
-        $this->makeRequest($url, 'DELETE', [], '');
-
-        if ($this->_cache) {
-            $this->_cache->delete($this->cacheKey($object->getId()));
-        }
+        // we must use the cache here so that it is correctly invalidated
+        $this->makeRequest($url, 'DELETE', [], '', true);
     }
 
     /**
@@ -112,7 +104,7 @@ class JsonLDClient
      * @psalm-param class-string<T> $className
      * @param array $params
      * @param bool $useCache
-     * @return Iterator<T>
+     * @return Iterator<T>&ArrayAccess&Countable
      * @throws JsonLDException
      */
     public function getMany(string $className, array $params, bool $useCache = false): Iterator
@@ -127,36 +119,17 @@ class JsonLDClient
 
         /** @var ApiIterable<T> $iter */
         $iter = new ApiIterable(
-            function (array $params2) use ($url, $className, $useCache) {
+            function (array $params2) use ($url, $useCache) {
                 ksort($params2);
-                $cacheKey = $this->parameterisedCacheKey($className, "$url?" . http_build_query($params2));
-                $serialised = null;
+                $response = $this->makeRequest($url, 'GET', $params2, null, $useCache);
 
-                if ($useCache && $this->_cache) {
-                    $raw = $this->_cache->get($cacheKey, null);
-                    if ($raw !== null) {
-                        $serialised = json_decode($this->_cache->get($cacheKey, null),
-                            true,
-                            512,
-                            JSON_THROW_ON_ERROR);
-                    }
-                }
-
-                if ($serialised === null) {
-                    $response = $this->makeRequest($url, 'GET', $params2);
-
-                    $serialised = [
-                        'code' => $response->getStatusCode(),
-                        'headers' => $response->getHeaders(),
-                        'version' => $response->getProtocolVersion(),
-                        'reason' => $response->getReasonPhrase(),
-                        'body' => $response->getBody()->getContents(),
-                    ];
-                }
-
-                if ($useCache && $this->_cache && $serialised) {
-                    $this->_cache->set($cacheKey, json_encode($serialised), self::CACHE_TIME);
-                }
+                $serialised = [
+                    'code' => $response->getStatusCode(),
+                    'headers' => $response->getHeaders(),
+                    'version' => $response->getProtocolVersion(),
+                    'reason' => $response->getReasonPhrase(),
+                    'body' => $response->getBody()->getContents(),
+                ];
 
                 return new Response($serialised['code'],
                     $serialised['headers'],
@@ -209,21 +182,8 @@ class JsonLDClient
             $url = sprintf('%s/%s', $url, $id);
         }
 
-        $jsonContents = null;
-        $cacheKey = $this->cacheKey($id);
-
-        if ($useCache && $this->_cache) {
-            $jsonContents = $this->_cache->get($cacheKey, null);
-        }
-
-        if ($jsonContents === null) {
-            $response = $this->makeRequest($url, 'GET', $params);
-            $jsonContents = $response->getBody()->getContents();
-        }
-
-        if ($useCache && $this->_cache && $jsonContents) {
-            $this->_cache->set($cacheKey, $jsonContents, self::CACHE_TIME);
-        }
+        $response = $this->makeRequest($url, 'GET', $params, null, $useCache);
+        $jsonContents = $response->getBody()->getContents();
 
         /** @var T $object */
         $object = $this->deserialize($jsonContents, $map);
@@ -270,11 +230,8 @@ class JsonLDClient
     {
         $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
 
-        $response = $this->makeRequest($url, $httpVerb, $params, $jsonContents);
-
-        if ($this->_cache && $object->getId()) {
-            $this->_cache->delete($this->cacheKey($object->getId()));
-        }
+        // we must use the cache here so that it is correctly invalidated
+        $response = $this->makeRequest($url, $httpVerb, $params, $jsonContents, true);
 
         /** @var T $object */
         $object = $this->deserialize(
@@ -297,6 +254,7 @@ class JsonLDClient
      * @param string $httpVerb
      * @param array $queryParams
      * @param string|null $jsonContents
+     * @param bool $useCache
      * @return ResponseInterface
      * @throws JsonLDResponseException
      * @throws JsonLDNotFoundException
@@ -305,7 +263,8 @@ class JsonLDClient
         string  $url,
         string  $httpVerb = 'GET',
         array   $queryParams = [],
-        ?string $jsonContents = null
+        ?string $jsonContents = null,
+        bool $useCache = false,
     ): ResponseInterface
     {
 
@@ -327,6 +286,11 @@ class JsonLDClient
             $requestParams[RequestOptions::BODY] = $jsonContents;
         }
 
+        $requestParams[CacheMiddleware::USE_CACHE] = $useCache;
+
+        // these two are here because psalm complained without them
+        $response = null;
+        $e = null;
         try {
             return $this->_client->request(
                 $httpVerb,
@@ -334,7 +298,7 @@ class JsonLDClient
                 $requestParams
             );
         } catch (RequestException $e) {
-            if ($e->hasResponse() && null !== $response = $e->getResponse()) {
+            if ($e->hasResponse() && null !== ($response = $e->getResponse())) {
                 if ($response->getStatusCode() === 404) {
                     throw new JsonLDNotFoundException();
                 }
@@ -382,23 +346,6 @@ class JsonLDClient
         if ($checkId && strlen($object->getId()) === 0) {
             throw new JsonLDException('Invalid object id');
         }
-    }
-
-    /**
-     * @param string $id
-     * @param string|null $unique
-     * @return string
-     */
-    protected function cacheKey(string $id, ?string $unique = null): string
-    {
-        return $unique ? "jsonld_{$unique}_{$id}" : "jsonld_{$id}";
-    }
-
-    protected function parameterisedCacheKey(string $className, string $url): string
-    {
-        $key = base64_encode(sha1($url));
-
-        return "jsonld_{$className}_$key";
     }
 
     /**
