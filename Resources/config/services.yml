@@ -16,6 +16,7 @@ services:
   jsonldclient.handlerstack:
     class: GuzzleHttp\HandlerStack
     factory: ['Bookboon\JsonLDClient\Client\GuzzleClientFactory', 'createStack']
+    arguments: ['@?jsonldclient.cache']
 
   jsonldclient.client:
     class: GuzzleHttp\ClientInterface
@@ -67,4 +68,4 @@ services:
       - '@jsonldclient.client'
       - '@serializer'
       - '@Bookboon\JsonLDClient\Mapping\MappingCollection'
-      - '@?jsonldclient.cache'
+
