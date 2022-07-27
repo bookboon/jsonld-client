@@ -3,13 +3,7 @@
 namespace Bookboon\JsonLDClient\Client;
 
 use Bookboon\JsonLDClient\Models\ConstantBufferStream;
-use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\Promise\FulfilledPromise;
-use GuzzleHttp\Promise\Promise;
-use GuzzleHttp\Promise\RejectedPromise;
-use GuzzleHttp\Psr7\BufferStream;
-use GuzzleHttp\Psr7\PumpStream;
-use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
