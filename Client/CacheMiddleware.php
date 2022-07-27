@@ -172,7 +172,7 @@ class CacheMiddleware
 
     protected function preCacheKey(RequestInterface $request): string
     {
-        $id = str_replace('/', '--', $request->getUri()->getPath());
+        $id = str_replace('/', '--',  trim($request->getUri()->getPath(), '/ '));
         return "jsonld_$id";
     }
 
