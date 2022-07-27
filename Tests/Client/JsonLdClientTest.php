@@ -349,7 +349,7 @@ class JsonLdClientTest extends TestCase
 
         $cacheStub->expects(self::exactly(2))
             ->method('set')
-            ->withConsecutive([self::equalTo('jsonld_--simple--bce73a1e-bc1f-43f5-b8dc-f05147f18978'), self::callback(function ($val) {
+            ->withConsecutive([self::equalTo('jsonld_simple--bce73a1e-bc1f-43f5-b8dc-f05147f18978'), self::callback(function ($val) {
                 if (!isset($val['timestamp'], $val['headers'])) {
                     return false;
                 }
@@ -363,7 +363,7 @@ class JsonLdClientTest extends TestCase
                 }
 
                 return true;
-            })], [self::equalTo('jsonld_--simple--bce73a1e-bc1f-43f5-b8dc-f05147f18978_c16bfa1d7236643659009b46f457c8d15b0d13b1'), self::callback(function ($val) use ($testJson) {
+            })], [self::equalTo('jsonld_simple--bce73a1e-bc1f-43f5-b8dc-f05147f18978_c16bfa1d7236643659009b46f457c8d15b0d13b1'), self::callback(function ($val) use ($testJson) {
                 if (!isset($val['timestamp'], $val['response'])) {
                     return false;
                 }
