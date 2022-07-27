@@ -105,7 +105,7 @@ class JsonLDClient
      * @return Iterator<T>&ArrayAccess&Countable
      * @throws JsonLDException
      */
-    public function getMany(string $className, array $params, bool $useCache = false): Iterator
+    public function getMany(string $className, array $params, bool $useCache = true): Iterator
     {
         $map = $this->_mappings->findEndpointByClass($className);
 
@@ -171,7 +171,7 @@ class JsonLDClient
      * @throws JsonLDResponseException
      * @throws JsonLDSerializationException
      */
-    public function getById(string $id, string $className, array $params = [], bool $useCache = false)
+    public function getById(string $id, string $className, array $params = [], bool $useCache = true)
     {
         $map = $this->_mappings->findEndpointByClass($className);
 

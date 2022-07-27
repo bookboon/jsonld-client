@@ -322,7 +322,7 @@ class JsonLdClientTest extends TestCase
             });
 
         $client = $this->getClient($testJson, $cacheStub);
-        $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, [], true);
+        $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, []);
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 1', $entity->getValue());
@@ -384,7 +384,7 @@ class JsonLdClientTest extends TestCase
             })]);
 
         $client = $this->getClient($testJson, $cacheStub);
-        $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, [], true);
+        $entity = $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, []);
 
         self::assertInstanceOf(SimpleClass::class, $entity);
         self::assertEquals('test value 1', $entity->getValue());
@@ -474,16 +474,16 @@ class JsonLdClientTest extends TestCase
             ]'), new Response(200, [], '[]')
         ], $cache);
 
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c']);
         self::assertCount(2, $iterator);
 
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c']);
         self::assertCount(2, $iterator);
 
-        $iterator = $client->getMany(SimpleClass::class, ['b' => 'c', 'a' => 'b'], true);
+        $iterator = $client->getMany(SimpleClass::class, ['b' => 'c', 'a' => 'b']);
         self::assertCount(2, $iterator);
 
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'c'], true);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'c']);
         self::assertCount(0, $iterator);
     }
 
@@ -514,21 +514,21 @@ class JsonLdClientTest extends TestCase
             ]'), new Response(200, [], '[]')
         ], $cache, [$middleware]);
 
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c']);
         self::assertCount(2, $iterator);
 
         // re-do with same headers
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c']);
         self::assertCount(2, $iterator);
 
         // re-do with only irrelevant header changed
         $irrelevantValue = 'i do not like cookies';
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c']);
         self::assertCount(2, $iterator);
 
         // re-do with different header
         $headerValue = '4';
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c']);
         self::assertCount(0, $iterator);
     }
 
@@ -575,7 +575,7 @@ class JsonLdClientTest extends TestCase
             ]')
         ], $cache, [$middleware]);
 
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c']);
         self::assertCount(2, $iterator);
 
         // post to endpoint
@@ -584,7 +584,7 @@ class JsonLdClientTest extends TestCase
         $client->create($new);
 
         // re-do with same headers
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c'], true);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b', 'b' => 'c']);
         self::assertCount(3, $iterator);
     }
 
@@ -604,10 +604,10 @@ class JsonLdClientTest extends TestCase
             ]'), new Response(200, [], '[]')
         ], $cache);
 
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b']);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b'], false);
         self::assertCount(2, $iterator);
 
-        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b']);
+        $iterator = $client->getMany(SimpleClass::class, ['a' => 'b'], false);
         self::assertCount(0, $iterator);
     }
 
