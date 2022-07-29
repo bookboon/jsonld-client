@@ -8,6 +8,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Utils;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use function GuzzleHttp\choose_handler;
 
 class GuzzleClientFactory
 {
@@ -16,7 +17,12 @@ class GuzzleClientFactory
     public static function createStack(
         ?CacheInterface $cache
     ): HandlerStack {
-        $handler = new HandlerStack(Utils::chooseHandler());
+        if (method_exists(Utils::class, 'chooseHandler')) {
+            $handler = new HandlerStack(Utils::chooseHandler());
+        } else {
+            $handler = new HandlerStack(choose_handler());
+        }
+
         if ($cache) {
             $handler->push(new CacheMiddleware($cache));
         }
