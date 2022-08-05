@@ -298,7 +298,7 @@ class JsonLDClient
         } catch (RequestException $e) {
             if ($e->hasResponse() && null !== ($response = $e->getResponse())) {
                 if ($response->getStatusCode() === 404) {
-                    throw new JsonLDNotFoundException();
+                    throw new JsonLDNotFoundException($e);
                 }
 
                 $errorResponse = null;
