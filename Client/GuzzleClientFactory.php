@@ -34,6 +34,7 @@ class GuzzleClientFactory
     public static function create(
         RequestStack $requestFactory,
         HandlerStack $stack,
+        float $defaultTimeout = 30.0
     ) : ClientInterface {
         return new Client(
             [
@@ -43,7 +44,8 @@ class GuzzleClientFactory
                     'User-Agent' => self::USER_AGENT
                     ]
                 ),
-                'handler' => $stack
+                'handler' => $stack,
+                'timeout'  => $defaultTimeout
             ]
         );
     }
