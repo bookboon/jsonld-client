@@ -77,7 +77,11 @@ class CacheMiddleware
 
             return $handler($request, $options)->then(
                 function (ResponseInterface $response) use ($request) {
-                    return $this->addToCache($request, $response, self::CACHE_TIME);
+                    if ($response->getStatusCode() === 404 || $response->getStatusCode() < 400) {
+                        return $this->addToCache($request, $response, self::CACHE_TIME);
+                    }
+
+                    return $response;
                 }
             );
         };

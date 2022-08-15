@@ -420,6 +420,49 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple/' . $testObject->getId(), $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
+    public function testUpdate_Cache_Not_Found(): void
+    {
+        $testJson = <<<JSON
+        {
+            "@type": "SimpleClass",
+            "value": "test value 1"
+        }
+        JSON;
+
+        /** @var MockObject&CacheInterface $cacheStub */
+        $cacheStub = $this->createStub(CacheInterface::class);
+        $cacheStub->expects(self::exactly(2))
+            ->method('set');
+
+        self::expectException(JsonLDNotFoundException::class);
+
+        $client = $this->getClient($testJson, $cacheStub, 404);
+        $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, []);
+    }
+
+
+    public function testUpdate_Cache_Error_Codes_No_Cache(): void
+    {
+        $testJson = <<<JSON
+        {
+            "@type": "SimpleClass",
+            "value": "test value 1"
+        }
+        JSON;
+
+        /** @var MockObject&CacheInterface $cacheStub */
+        $cacheStub = $this->createStub(CacheInterface::class);
+        $cacheStub->expects(self::never())
+            ->method('set');
+
+        foreach ([400, 401, 403, 500, 503] as $statusCode) {
+            self::expectException(JsonLDResponseException::class);
+
+            $client = $this->getClient($testJson, $cacheStub, $statusCode);
+            $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class, []);
+        }
+    }
+
     public function testDelete_Cache_Success(): void
     {
         $testObject = new SimpleClass();
@@ -644,10 +687,10 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/nestedarray/bce73a1e-bc1f-43f5-b8dc-f05147f18978', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
-    protected function getClient(string $body, CacheInterface $cache = null): JsonLDClient
+    protected function getClient(string $body, CacheInterface $cache = null, $statusCode = 200): JsonLDClient
     {
         return $this->getClientForResponses([
-            new Response(200, [], $body)
+            new Response($statusCode, [], $body)
         ], $cache);
     }
 
