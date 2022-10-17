@@ -123,6 +123,12 @@ class MappingEndpoint
         return $this->singleton;
     }
 
+    public function getUnitName(): string
+    {
+        $pos = strrpos($this->uri, '/');
+        return !$pos ? $this->uri : substr($this->uri, $pos + 1);
+    }
+
     protected function endsWith(string $haystack, string $needle): bool
     {
         return substr($haystack, -strlen($needle)) === $needle;

@@ -94,7 +94,7 @@ class JsonLDClient
         }
 
         // we must use the cache here so that it is correctly invalidated
-        $this->makeRequest($url, 'DELETE', [], '', true);
+        $this->makeRequest($url, 'DELETE', [], [], '', true);
     }
 
     /**
@@ -114,12 +114,13 @@ class JsonLDClient
         }
 
         $url = $map->getUrl($params);
+        $unitName = $map->getUnitName();
 
         /** @var ApiIterable<T> $iter */
         $iter = new ApiIterable(
-            function (array $params2) use ($url, $useCache) {
+            function (array $params2, array $headers) use ($url, $useCache) {
                 ksort($params2);
-                $response = $this->makeRequest($url, 'GET', $params2, null, $useCache);
+                $response = $this->makeRequest($url, 'GET', $params2, $headers, null, $useCache);
 
                 $serialised = [
                     'code' => $response->getStatusCode(),
@@ -137,7 +138,8 @@ class JsonLDClient
                 );
             },
             fn(string $data) => $this->deserialize($data, $map),
-            $params
+            $params,
+            $unitName
         );
 
         return $iter;
@@ -180,7 +182,7 @@ class JsonLDClient
             $url = sprintf('%s/%s', $url, $id);
         }
 
-        $response = $this->makeRequest($url, 'GET', $params, null, $useCache);
+        $response = $this->makeRequest($url, 'GET', $params, [], null, $useCache);
         $jsonContents = $response->getBody()->getContents();
 
         /** @var T $object */
@@ -229,7 +231,7 @@ class JsonLDClient
         $jsonContents = $this->_serializer->serialize($object, JsonLDEncoder::FORMAT);
 
         // we must use the cache here so that it is correctly invalidated
-        $response = $this->makeRequest($url, $httpVerb, $params, $jsonContents, true);
+        $response = $this->makeRequest($url, $httpVerb, $params, [], $jsonContents, true);
 
         /** @var T $object */
         $object = $this->deserialize(
@@ -261,15 +263,15 @@ class JsonLDClient
         string  $url,
         string  $httpVerb = 'GET',
         array   $queryParams = [],
+        array   $headers = [],
         ?string $jsonContents = null,
         bool $useCache = false,
     ): ResponseInterface
     {
-
-        $headers = [
+        $headers = array_merge($headers, [
             'Accept-Encoding' => 'application/json',
             'Content-Type' => 'application/json'
-        ];
+        ]);
 
         if (null !== $token = $this->accessToken) {
             $headers['Authorization'] = "Bearer {$token->getToken()}";

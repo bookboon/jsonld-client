@@ -3,7 +3,9 @@
 namespace Bookboon\JsonLDClient\Models;
 
 use ArrayAccess;
+use Bookboon\JsonLDClient\Helpers\ContentRange;
 use Bookboon\JsonLDClient\Helpers\LinkParser;
+use Bookboon\JsonLDClient\Helpers\Range;
 use Countable;
 use Iterator;
 use Psr\Http\Message\ResponseInterface;
@@ -21,8 +23,10 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     public const LIMIT = 'limit';
 
     public const LINK_HEADER = 'Link';
+    public const CONTENT_RANGE_HEADER = 'Content-Range';
+    public const RANGE_HEADER = 'Range';
 
-    /** @var callable(array): ResponseInterface */
+    /** @var callable(array, array): ResponseInterface */
     private $_makeRequest;
 
     /** @var callable callable(string): (Array<T>|T) */
@@ -40,18 +44,22 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     private bool $isIterationDisabled = false;
     private bool $hasRequested = false;
     private ?LinkParser $link = null;
+    private ?ContentRange $contentRange = null;
+    private string $_unitName;
 
     /**
      * ApiIterable constructor.
-     * @param callable(array): ResponseInterface $makeRequest
+     * @param callable(array, array): ResponseInterface $makeRequest
      * @param callable(string): (array<T>|T) $deserialize
      * @param Array<string,string|int> $params
      */
-    public function __construct(callable $makeRequest, callable $deserialize, array $params)
+    public function __construct(callable $makeRequest, callable $deserialize, array $params, string $unitName)
     {
         $this->_makeRequest = $makeRequest;
         $this->_deserialize = $deserialize;
         $this->_params = $params;
+        $this->_unitName = $unitName;
+
         if (isset($this->_params[self::LIMIT])) {
             $this->requestLimit = (int) $this->_params[self::LIMIT];
         }
@@ -67,14 +75,25 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
         $deserialize = $this->_deserialize;
         $queryOffset = $this->_params[self::OFFSET] ?? $offset;
 
+        $rangeHeader = new Range($this->_unitName, $queryOffset, $this->requestLimit);
+
         /** @var ResponseInterface $response */
         $response = $makeRequest(
-            array_merge($this->_params, [self::OFFSET => $queryOffset, self::LIMIT => $this->requestLimit])
+            array_merge($this->_params, [self::OFFSET => $queryOffset, self::LIMIT => $this->requestLimit]),
+            [self::RANGE_HEADER => $rangeHeader->format()]
         );
 
         $link = $response->getHeader(static::LINK_HEADER);
         if (false === $this->hasRequested && isset($link[0]) && is_string($link[0])) {
             $this->link = new LinkParser($link[0]);
+        }
+
+        $contentRangeHeaderVal = $response->getHeader(static::CONTENT_RANGE_HEADER);
+        if (false === $this->hasRequested && isset($contentRangeHeaderVal[0]) && is_string($contentRangeHeaderVal[0])) {
+            $this->link = null;
+
+            $this->contentRange = new ContentRange;
+            $this->contentRange->parse($contentRangeHeaderVal[0]);
         }
 
         $this->hasRequested = true;
@@ -103,7 +122,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
         }
 
         if (!$this->hasRequested ||
-            ($this->link !== null && !array_key_exists($batchKey, $this->results) && !$this->isIterationDisabled)
+            (($this->link !== null || $this->contentRange !== null) && !array_key_exists($batchKey, $this->results) && !$this->isIterationDisabled)
         ) {
             $this->makeRequest($batchKey);
             return $this->locate($offset);
@@ -217,6 +236,10 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
                 $lastPageCount = isset($this->results[$last]) ? count($this->results[$last]) : $this->requestLimit;
                 $count = $last + $lastPageCount;
             }
+        }
+
+        if ($this->contentRange !== null) {
+            $count = $this->contentRange->getSize();
         }
 
         if ($count === 0) {
