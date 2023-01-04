@@ -6,6 +6,7 @@ use Bookboon\JsonLDClient\Helpers\LinkParser;
 use Bookboon\JsonLDClient\Helpers\Range;
 use Bookboon\JsonLDClient\Models\ApiIterable;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\MockObject\Api;
 use PHPUnit\Framework\TestCase;
 
 class ApiIterableTest extends TestCase
@@ -26,7 +27,7 @@ class ApiIterableTest extends TestCase
 
 
         self::assertCount(0, $array);
-        self::assertCount(0, $array);
+        self::assertCount(0, iterator_to_array($array));
 
         self::assertEquals(1, $calledCount);
     }
@@ -47,7 +48,7 @@ class ApiIterableTest extends TestCase
 
 
         self::assertCount(10, $array);
-        self::assertCount(10, $array);
+        self::assertCount(10, iterator_to_array($array));
 
         self::assertEquals(1, $calledCount);
     }
@@ -73,6 +74,7 @@ class ApiIterableTest extends TestCase
             $items[] = $item;
         }
         self::assertCount(13, $array);
+        self::assertCount(13, iterator_to_array($array));
         self::assertEquals(2, $calledCount);
     }
 
@@ -97,6 +99,7 @@ class ApiIterableTest extends TestCase
             $items[] = $item;
         }
         self::assertCount(13, $array);
+        self::assertCount(13, iterator_to_array($array));
         self::assertEquals(2, $calledCount);
     }
 
@@ -128,6 +131,7 @@ class ApiIterableTest extends TestCase
             $items[] = $item;
         }
         self::assertCount(26, $array);
+        self::assertCount(26, iterator_to_array($array));
         self::assertEquals(3, $calledCount);
     }
 
@@ -159,13 +163,14 @@ class ApiIterableTest extends TestCase
             $items[] = $item;
         }
         self::assertCount(26, $array);
+        self::assertCount(26, iterator_to_array($array));
         self::assertEquals(3, $calledCount);
     }
 
     public function testHasResultsExactly30() : void
     {
         $calledCount = 0;
-        $link = '<http://test.com/entity?offset=0&limit=100>; rel="first",<http://test.com/entity?offset=1800&limit=100>; rel="last",<http://test.com/entity?offset=100&limit=100>; rel="next"';
+        $link = '<http://test.com/entity?offset=0&limit=10>; rel="first",<http://test.com/entity?offset=20&limit=10>; rel="last",<http://test.com/entity?offset=10&limit=10>; rel="next"';
 
         $array = new ApiIterable(
             function (array $params, $headers) use (&$calledCount, $link) {
@@ -187,6 +192,8 @@ class ApiIterableTest extends TestCase
             [],
             'letters'
         );
+
+        self::assertCount(30, $array);
 
         $items = [];
         foreach ($array as $item) {
@@ -218,12 +225,14 @@ class ApiIterableTest extends TestCase
             'letters'
         );
 
+        self::assertCount(3, $array);
+
         $items = [];
         foreach ($array as $item) {
             $items[] = $item;
         }
 
-        self::assertCount(3, $array);
+        self::assertCount(3, $items);
         self::assertEquals(1, $calledCount);
     }
 
@@ -245,12 +254,14 @@ class ApiIterableTest extends TestCase
             'letters'
         );
 
+        self::assertCount(3, $array);
+
         $items = [];
         foreach ($array as $item) {
             $items[] = $item;
         }
 
-        self::assertCount(3, $array);
+        self::assertCount(3, $items);
         self::assertEquals(1, $calledCount);
     }
 
@@ -272,12 +283,14 @@ class ApiIterableTest extends TestCase
             'letters'
         );
 
+        self::assertCount(3, $array);
+
         $items = [];
         foreach ($array as $item) {
             $items[] = $item;
         }
 
-        self::assertCount(3, $array);
+        self::assertCount(3, $items);
         self::assertEquals(1, $calledCount);
     }
 
@@ -296,13 +309,12 @@ class ApiIterableTest extends TestCase
             function (string $data) {
                 return $this->generateLetters('a', 'j');
             },
-            [],
+            [ApiIterable::OFFSET => 0],
             'letters'
         );
 
-        $test = $array[5];
-
         self::assertCount(60, $array);
+        self::assertCount(10, iterator_to_array($array));
         self::assertEquals(1, $calledCount);
     }
 
@@ -324,13 +336,12 @@ class ApiIterableTest extends TestCase
             function (string $data) {
                 return $this->generateLetters('a', 'j');
             },
-            [],
+            [ApiIterable::OFFSET => 0],
             'letters'
         );
 
-        $test = $array[5];
-
         self::assertCount(60, $array);
+        self::assertCount(10, iterator_to_array($array));
         self::assertEquals(1, $calledCount);
     }
 
@@ -364,6 +375,7 @@ class ApiIterableTest extends TestCase
         }
 
         self::assertCount(54, $array);
+        self::assertCount(54, $items);
         self::assertEquals(6, $calledCount);
     }
 
