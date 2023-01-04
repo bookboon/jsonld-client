@@ -126,7 +126,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
         }
 
         if (isset($this->results[$batchKey], $this->results[$batchKey][$batchOffset])) {
-            return $this->results[$batchKey][$offset % $this->requestLimit];
+            return $this->results[$batchKey][$batchOffset];
         }
 
         if (!$this->hasRequested ||
