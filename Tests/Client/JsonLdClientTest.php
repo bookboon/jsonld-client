@@ -208,49 +208,48 @@ class JsonLdClientTest extends TestCase
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
+                "value": "test value 3"
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
+                "value": "test value 4"
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
+                "value": "test value 5"
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
+                "value": "test value 6"
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
+                "value": "test value 7"
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
+                "value": "test value 8"
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
+                "value": "test value 9"
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
+                "value": "test value 10"
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
+                "value": "test value 11"
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
+                "value": "test value 12"
             },
             {
                 "@type": "SimpleClass",
-                "value": "test value 2"
-            }
-            
+                "value": "test value 13"
+            }            
         ]
         JSON;
 
@@ -260,11 +259,14 @@ class JsonLdClientTest extends TestCase
         self::assertCount(13, $entities);
         self::assertCount(13, iterator_to_array($entities));
 
+        foreach ($entities  as $key => $singleEntity) {
+            $expected = sprintf("test value %s", strval($key + 1));
+            self::assertEquals($expected, $singleEntity->getValue());
+        }
+
         self::assertNotNull($this->mockHandler->getLastRequest());
         self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
-
-
 
     public function testPersist_Update(): void
     {
