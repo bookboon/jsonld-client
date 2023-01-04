@@ -194,6 +194,78 @@ class JsonLdClientTest extends TestCase
         self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
     }
 
+    public function testGetMany_SuccessWithNoResponseHeader(): void
+    {
+        $testJson = <<<JSON
+        [
+            {
+                "@type": "SimpleClass",
+                "value": "test value 1"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            },
+            {
+                "@type": "SimpleClass",
+                "value": "test value 2"
+            }
+            
+        ]
+        JSON;
+
+        $client = $this->getClient($testJson);
+        $entities = $client->getMany(SimpleClass::class, []);
+
+        self::assertCount(13, $entities);
+        self::assertCount(13, iterator_to_array($entities));
+
+        self::assertNotNull($this->mockHandler->getLastRequest());
+        self::assertEquals('/simple', $this->mockHandler->getLastRequest()->getUri()->getPath());
+    }
+
+
+
     public function testPersist_Update(): void
     {
         $testJson = <<<JSON

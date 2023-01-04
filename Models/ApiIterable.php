@@ -46,6 +46,7 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
     private ?LinkParser $link = null;
     private ?ContentRange $contentRange = null;
     private string $_unitName;
+    private bool $isPaginationSupported = false;
 
     /**
      * ApiIterable constructor.
@@ -85,13 +86,14 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
 
         $link = $response->getHeader(static::LINK_HEADER);
         if (false === $this->hasRequested && isset($link[0]) && is_string($link[0])) {
+            $this->isPaginationSupported = true;
             $this->link = new LinkParser($link[0]);
         }
 
         $contentRangeHeaderVal = $response->getHeader(static::CONTENT_RANGE_HEADER);
         if (false === $this->hasRequested && isset($contentRangeHeaderVal[0]) && is_string($contentRangeHeaderVal[0])) {
             $this->link = null;
-
+            $this->isPaginationSupported = true;
             $this->contentRange = new ContentRange;
             $this->contentRange->parse($contentRangeHeaderVal[0]);
         }
@@ -115,9 +117,15 @@ class ApiIterable implements ArrayAccess, Iterator, Countable
      */
     protected function locate(int $offset)
     {
-        $batchKey = ((int) floor($offset / $this->requestLimit)) * $this->requestLimit;
+        $batchKey = 0;
+        $batchOffset = $offset;
 
-        if (isset($this->results[$batchKey], $this->results[$batchKey][$offset % $this->requestLimit])) {
+        if ($this->isPaginationSupported) {
+            $batchKey = ((int) floor($offset / $this->requestLimit)) * $this->requestLimit;
+            $batchOffset = $offset % $this->requestLimit;
+        }
+
+        if (isset($this->results[$batchKey], $this->results[$batchKey][$batchOffset])) {
             return $this->results[$batchKey][$offset % $this->requestLimit];
         }
 
