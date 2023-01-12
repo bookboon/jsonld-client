@@ -1,0 +1,42 @@
+[
+ {
+  "Description": "Generic API Key",
+  "StartLine": 9,
+  "EndLine": 9,
+  "StartColumn": 12,
+  "EndColumn": 0,
+  "Match": "token: REDACTED",
+  "Secret": "REDACTED",
+  "File": ".travis.yml",
+  "SymlinkFile": "",
+  "Commit": "39e27f6fad34e2a295b3ec4953f6443c83f83353",
+  "Entropy": 3.76003,
+  "Author": "Lasse Mammen",
+  "Email": "lkm@bookboon.com",
+  "Date": "2020-07-17T15:55:22Z",
+  "Message": "Do not test php 7.2",
+  "Tags": [],
+  "RuleID": "generic-api-key",
+  "Fingerprint": "39e27f6fad34e2a295b3ec4953f6443c83f83353:.travis.yml:generic-api-key:9"
+ },
+ {
+  "Description": "Generic API Key",
+  "StartLine": 10,
+  "EndLine": 11,
+  "StartColumn": 11,
+  "EndColumn": 1,
+  "Match": "token: REDACTED",
+  "Secret": "REDACTED",
+  "File": ".travis.yml",
+  "SymlinkFile": "",
+  "Commit": "8529beb46c1415158820de27afb99fe841347a36",
+  "Entropy": 3.76003,
+  "Author": "Lasse Mammen",
+  "Email": "lkm@bookboon.com",
+  "Date": "2020-07-17T15:53:52Z",
+  "Message": "Add travis and phpstan",
+  "Tags": [],
+  "RuleID": "generic-api-key",
+  "Fingerprint": "8529beb46c1415158820de27afb99fe841347a36:.travis.yml:generic-api-key:10"
+ }
+]

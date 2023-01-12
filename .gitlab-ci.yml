@@ -4,6 +4,7 @@ include:
     file:
       - '/environment/v1/variables.yml'
       - '/test/v1/base.yml'
+      - '/security/v1/security.gitlab-ci.yml'
 
 stages:
   - test
