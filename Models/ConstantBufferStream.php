@@ -12,12 +12,12 @@ class ConstantBufferStream implements StreamInterface
     {
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return substr($this->buffer, $this->pos);
     }
 
-    public function close()
+    public function close(): void
     {
         // do nothing
     }
