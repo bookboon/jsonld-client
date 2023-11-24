@@ -177,6 +177,10 @@ class JsonLDClient
     {
         $map = $this->_mappings->findEndpointByClass($className);
 
+        if (trim($id) === '') {
+            throw new JsonLDException('id must not be an empty string');
+        }
+
         $url = $map->getUrl($params);
         if (false === $map->isSingleton()) {
             $url = sprintf('%s/%s', $url, $id);
