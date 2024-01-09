@@ -35,6 +35,7 @@ class SerializerHelper
     {
         $docblockExtractor = new PhpDocExtractor();
         $reflectionExtractor = new ReflectionExtractor();
+        /** @psalm-suppress TooManyArguments */
         $propertyExtractor = new PropertyInfoExtractor(
             [
             ],

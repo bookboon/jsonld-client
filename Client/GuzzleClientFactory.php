@@ -7,6 +7,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Utils;
 use Psr\SimpleCache\CacheInterface;
+use Sentry\SentrySdk;
 use Symfony\Component\HttpFoundation\RequestStack;
 use function GuzzleHttp\choose_handler;
 
@@ -26,6 +27,8 @@ class GuzzleClientFactory
         if ($cache) {
             $handler->push(new CacheMiddleware($cache));
         }
+
+       $handler->push(new SentryMiddleware());
 
         /** @psalm-suppress InvalidArgument this is needed because Guzzle's type annotation game is not fresh enough */
         return HandlerStack::create($handler);
