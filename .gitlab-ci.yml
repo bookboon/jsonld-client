@@ -16,4 +16,5 @@ variables:
 
 .auto_devops: &auto_devops |
   [[ "$TRACE" ]] && set -x
+  
   COMPOSER=$(echo `which composer`)
