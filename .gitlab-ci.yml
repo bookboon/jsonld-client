@@ -13,3 +13,6 @@ stages:
 
 variables:
   PHP_IMAGE: registry.bookbooncloud.com/docker/php-base:8.1.8
+
+.auto_devops: &auto_devops |
+  COMPOSER=$(echo `which composer`)
