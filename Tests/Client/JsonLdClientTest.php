@@ -8,6 +8,7 @@ use Bookboon\JsonLDClient\Client\JsonLDClient;
 use Bookboon\JsonLDClient\Client\JsonLDNotFoundException;
 use Bookboon\JsonLDClient\Client\JsonLDResponseException;
 use Bookboon\JsonLDClient\Client\JsonLDSerializationException;
+use Bookboon\JsonLDClient\Client\JsonLDTokenException;
 use Bookboon\JsonLDClient\Mapping\MappingApi;
 use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
@@ -148,6 +149,57 @@ class JsonLdClientTest extends TestCase
                 'Error Communicating with Server',
                 new Request('GET', 'test'),
                 new Response(400, [], '{"errors":[{"status": "400", "title": "Bad Request"}]}')
+            )
+        );
+        $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
+    }
+
+    public function testGetById_ResponseTokenRevokedError(): void
+    {
+        $this->expectException(JsonLDTokenException::class);
+        $this->expectExceptionMessage("401: Unauthorized");
+
+        $client = $this->getClient("");
+        $this->mockHandler->reset();
+        $this->mockHandler->append(
+            new RequestException(
+                'Error Communicating with Server',
+                new Request('GET', 'test'),
+                new Response(400, [], '{"errors":[{"status": "401", "title": "Unauthorized", "code": "AS10001"}]}')
+            )
+        );
+        $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
+    }
+
+    public function testGetById_ResponseTokenInvalidError(): void
+    {
+        $this->expectException(JsonLDTokenException::class);
+        $this->expectExceptionMessage("401: Unauthorized");
+
+        $client = $this->getClient("");
+        $this->mockHandler->reset();
+        $this->mockHandler->append(
+            new RequestException(
+                'Error Communicating with Server',
+                new Request('GET', 'test'),
+                new Response(400, [], '{"errors":[{"status": "401", "title": "Unauthorized", "code": "AS10002"}]}')
+            )
+        );
+        $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);
+    }
+
+    public function testGetById_ResponseUnknownError(): void
+    {
+        $this->expectException(JsonLDResponseException::class);
+        $this->expectExceptionMessage("401: Unauthorized");
+
+        $client = $this->getClient("");
+        $this->mockHandler->reset();
+        $this->mockHandler->append(
+            new RequestException(
+                'Error Communicating with Server',
+                new Request('GET', 'test'),
+                new Response(400, [], '{"errors":[{"status": "401", "title": "Unauthorized", "code": "UNKNOWNCODE"}]}')
             )
         );
         $client->getById('bce73a1e-bc1f-43f5-b8dc-f05147f18978', SimpleClass::class);

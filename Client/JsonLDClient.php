@@ -7,6 +7,7 @@ use Bookboon\JsonLDClient\Mapping\MappingCollection;
 use Bookboon\JsonLDClient\Mapping\MappingEndpoint;
 use Bookboon\JsonLDClient\Models\ApiErrorResponse;
 use Bookboon\JsonLDClient\Models\ApiIterable;
+use Bookboon\JsonLDClient\Models\ErrorCodes;
 use Bookboon\JsonLDClient\Serializer\JsonLDEncoder;
 use Bookboon\JsonLDClient\Serializer\JsonLDNormalizer;
 use Countable;
@@ -303,8 +304,10 @@ class JsonLDClient
             );
         } catch (RequestException $e) {
             if ($e->hasResponse() && null !== ($response = $e->getResponse())) {
+                $exceptionClass = JsonLDResponseException::class;
+
                 if ($response->getStatusCode() === 404) {
-                    throw new JsonLDNotFoundException($e);
+                    $exceptionClass = JsonLDNotFoundException::class;
                 }
 
                 $errorResponse = null;
@@ -317,9 +320,17 @@ class JsonLDClient
                         ApiErrorResponse::class
                     );
                 } catch (JsonLDSerializationException $e2) {
+                    // Do not throw additional exception when error response cant be parsed
                 }
 
-                throw new JsonLDResponseException(
+                if ($errorResponse
+                    && count($errorResponse->getErrors())
+                    && ErrorCodes::isTokenError($errorResponse->getErrors()[0]->getCode())
+                ) {
+                    $exceptionClass = JsonLDTokenException::class;
+                }
+
+                throw new $exceptionClass(
                     $e->getMessage(),
                     $response->getStatusCode(),
                     $e,
